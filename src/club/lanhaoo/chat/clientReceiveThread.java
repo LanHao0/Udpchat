@@ -1,3 +1,5 @@
+package club.lanhaoo.chat;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.Scanner;
@@ -17,11 +19,28 @@ public class clientReceiveThread implements Runnable {
             DatagramSocket datagramSocket=new DatagramSocket(12251);
             byte[] bytes_from_server=new byte[1024];
             DatagramPacket datagramPacket=new DatagramPacket(bytes_from_server,bytes_from_server.length);
+
+            String username;
+
             while (true){
                 datagramSocket.receive(datagramPacket);
+                //todo 接受到的消息都是来自服务端的。。。。
 
                 String message_pure=new String(datagramPacket.getData(),0,datagramPacket.getLength());
-                System.out.println("来自 "+datagramPacket.getAddress().getHostAddress());
+                String fromip=message_pure.split("&")[1];
+                message_pure=message_pure.split("&")[0];
+
+                if(message_pure.startsWith("[with_name]")){
+                    if(message_pure.contains("@")){
+                        message_pure=message_pure.replace("[with_name]","");
+                        username=message_pure.split("@")[0];
+                        System.out.println("来自 "+username);
+                        System.out.println(message_pure.split("@")[1]);
+                        continue;
+                    }
+                }
+
+                System.out.println("来自 "+fromip);
                 System.out.println(message_pure);
             }
 
