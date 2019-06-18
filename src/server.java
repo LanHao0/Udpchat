@@ -1,3 +1,5 @@
+import org.omg.PortableInterceptor.INACTIVE;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -18,6 +20,16 @@ public class server {
         //todo 服务器发送消息到房间
         System.out.println("开始服务端");
         InetAddress localHost=InetAddress.getLocalHost();
+
+        //自动生成广播地址
+        String[] temp_arr;
+
+        temp_arr=localHost.getHostAddress().split("\\.");
+        temp_arr[3]="255";
+        String broadcast_ip=temp_arr[0]+"."+temp_arr[1]+"."+temp_arr[2]+"."+temp_arr[3];
+
+        System.out.println("广播地址: "+ broadcast_ip);
+
         byte[] bytes=new byte[1024];
         DatagramSocket datagramSocket=new DatagramSocket(2112);
         DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length);
@@ -38,14 +50,17 @@ public class server {
 
             //广播消息
             System.out.println("广播来自 "+datagramPacket.getAddress().getHostAddress()+" 的消息 "+ pure_message);
-            datagramSocket.send(new DatagramPacket(bytes,bytes.length,InetAddress.getByName("127.0.0.255"),12251));
+            byte[] bytes1=new byte[1024];
+            bytes1=pure_message.getBytes();
+            datagramSocket.send(new DatagramPacket(bytes1,bytes1.length,InetAddress.getByName(broadcast_ip),12251));
             if(pure_message.equals(SuperendendCommand)){
                 //todo pure_message 判断来源用户
 
                 System.out.println(ServerOfftips);
 
                 byte[] temp_byte=ServerOfftips.getBytes();
-                datagramSocket.send(new DatagramPacket(temp_byte,temp_byte.length,InetAddress.getByName("127.0.0.255"),12251));
+
+                datagramSocket.send(new DatagramPacket(temp_byte,temp_byte.length,InetAddress.getByName(broadcast_ip),12251));
                 break;
             }
 
