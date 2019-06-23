@@ -17,6 +17,9 @@ use following command to start server and client.
 
  
 enter server ip in client.sh, then enter any message you want.
+### For Android user:
+Download apk from release of this project:
+[Udpchat_android](https://github.com/LanHao0/Udpchat_android/releases)
 
 Here're some commands you may need.
 
@@ -47,6 +50,9 @@ Here're some commands you may need.
 
  
 在client.sh中输入服务器Ip地址, 然后发送你想要发送的消息
+### 安卓 手机用户:
+从项目的 release 中下载apk安装包:
+[Udpchat_android](https://github.com/LanHao0/Udpchat_android/releases)
 
 下面是你可能需要的一些命令：
 
