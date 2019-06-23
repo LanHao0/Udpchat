@@ -47,8 +47,8 @@ public class server {
             datagramSocket.receive(datagramPacket);
             //收到消息
 
-            String received_message_merge=new String(datagramPacket.getData(),0,datagramPacket.getLength())+" 来自 "+datagramPacket.getAddress().getHostAddress();
-            String pure_message=new String(datagramPacket.getData(),0,datagramPacket.getLength());
+            String received_message_merge=new String(datagramPacket.getData(),0,datagramPacket.getLength(),"UTF-8")+" 来自 "+datagramPacket.getAddress().getHostAddress();
+            String pure_message=new String(datagramPacket.getData(),0,datagramPacket.getLength(),"UTF-8");
             String fromIP=datagramPacket.getAddress().getHostAddress();
 
 
