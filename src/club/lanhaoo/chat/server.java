@@ -60,7 +60,7 @@ public class server {
                 //如果来自被封禁IP，则不进行操作
                 String bannedtips="你已被管理员封禁，无法发送群消息&[系统消息]";
                 byte[] bytes1=new byte[1024];
-                bytes1=bannedtips.getBytes();
+                bytes1=bannedtips.getBytes("UTF-8");
                 datagramSocket.send(new DatagramPacket(bytes1,bytes1.length,InetAddress.getByName(fromIP),12251));
                 System.out.println("来自封禁Ip:"+fromIP+"内容:"+pure_message);
                 continue;
@@ -83,7 +83,7 @@ public class server {
                     if (pure_message.contains("UserCommand")){
                         if (pure_message.contains(UserCommand_Nonamesend)){
                             String string="[匿名消息]"+pure_message.split("#")[1]+"&匿名用户";
-                            datagramSocket.send(new DatagramPacket(string.getBytes(),string.getBytes().length,InetAddress.getByName(broadcast_ip),12251));
+                            datagramSocket.send(new DatagramPacket(string.getBytes("UTF-8"),string.getBytes("UTF-8").length,InetAddress.getByName(broadcast_ip),12251));
                         }
                         continue;
                     }
@@ -100,7 +100,7 @@ public class server {
                                     System.out.println("Banned ip:"+pure_message.split("#")[2]);
 
                                     String temp="["+fromIP+"已被管理员封禁]&[系统消息]";
-                                    datagramSocket.send(new DatagramPacket(temp.getBytes(),temp.getBytes().length,InetAddress.getByName(broadcast_ip),12251));
+                                    datagramSocket.send(new DatagramPacket(temp.getBytes("UTF-8"),temp.getBytes("UTF-8").length,InetAddress.getByName(broadcast_ip),12251));
                                     continue;
 
                                 }
@@ -111,7 +111,7 @@ public class server {
                                     System.out.println("unban ip:"+pure_message.split("#")[2]);
 
                                     String temp="["+fromIP+"解除封禁]&[系统消息]";
-                                    datagramSocket.send(new DatagramPacket(temp.getBytes(),temp.getBytes().length,InetAddress.getByName(broadcast_ip),12251));
+                                    datagramSocket.send(new DatagramPacket(temp.getBytes("UTF-8"),temp.getBytes("UTF-8").length,InetAddress.getByName(broadcast_ip),12251));
                                     continue;
 
                                 }
@@ -120,7 +120,7 @@ public class server {
 
                                         System.out.println(ServerOfftips);
 
-                                        byte[] temp_byte=ServerOfftips.getBytes();
+                                        byte[] temp_byte=ServerOfftips.getBytes("UTF-8");
 
                                         datagramSocket.send(new DatagramPacket(temp_byte,temp_byte.length,InetAddress.getByName(broadcast_ip),12251));
                                         break;
@@ -136,7 +136,7 @@ public class server {
                 System.out.println("广播来自 "+datagramPacket.getAddress().getHostAddress()+" 的消息 "+ pure_message);
                 byte[] bytes1=new byte[1024];
                 pure_message=pure_message+"&"+fromIP;
-                bytes1=pure_message.getBytes();
+                bytes1=pure_message.getBytes("UTF-8");
                 datagramSocket.send(new DatagramPacket(bytes1,bytes1.length,InetAddress.getByName(broadcast_ip),12251));
 
 

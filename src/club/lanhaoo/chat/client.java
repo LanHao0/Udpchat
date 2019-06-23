@@ -56,7 +56,7 @@ public class client {
                 if (raw_Data.contains(secret_Talk)){
                     String toip=raw_Data.split("#")[1];
                     String string="[私聊消息]"+raw_Data.split("#")[2]+"&"+InetAddress.getLocalHost().getHostAddress();
-                    byte[] temp_bytes=string.getBytes();
+                    byte[] temp_bytes=string.getBytes("UTF-8");
                     DatagramPacket temp_dataPacket=new DatagramPacket(temp_bytes,temp_bytes.length,InetAddress.getByName(toip),12251);
                     datagramSocket.send(temp_dataPacket);
                     continue;
@@ -64,7 +64,7 @@ public class client {
 
                 if (raw_Data.contains(end_command)){
                     inCommunication=false;
-                    byte[] temp_bytes=end_tips.getBytes();
+                    byte[] temp_bytes=end_tips.getBytes("UTF-8");
                     DatagramPacket temp_dataPacket=new DatagramPacket(temp_bytes,temp_bytes.length,InetAddress.getByName(server_ip),2112);
                     System.out.println("您已下线");
                     datagramSocket.send(temp_dataPacket);
@@ -77,7 +77,7 @@ public class client {
                     String[] strings=raw_Data.split("#");
                     username=strings[1];
                     String temp_merge_message="[with_name]"+username+"#"+raw_Data;
-                    byte[] temp_bytes=temp_merge_message.getBytes();
+                    byte[] temp_bytes=temp_merge_message.getBytes("UTF-8");
                     DatagramPacket temp_dataPacket=new DatagramPacket(temp_bytes,temp_bytes.length,InetAddress.getByName(server_ip),2112);
 
                     System.out.println("已设置姓名："+username);
@@ -90,7 +90,7 @@ public class client {
             }
 
 
-            byte[] bytes=raw_Data.getBytes();
+            byte[] bytes=raw_Data.getBytes("UTF-8");
             DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length,InetAddress.getByName(server_ip),2112);
 
             datagramSocket.send(datagramPacket);
