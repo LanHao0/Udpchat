@@ -26,7 +26,8 @@ public class clientReceiveThread implements Runnable {
                 datagramSocket.receive(datagramPacket);
                 //todo 接受到的消息都是来自服务端的。。。。
 
-                String message_pure=new String(datagramPacket.getData(),0,datagramPacket.getLength());
+                String message_pure=new String(datagramPacket.getData(),0,datagramPacket.getLength(),"UTF-8");
+
                 String fromip=message_pure.split("&")[1];
                 message_pure=message_pure.split("&")[0];
 
