@@ -7,6 +7,8 @@
 
 
 
+import club.lanhaoo.chat.UserSettings;
+
 import javax.swing.*;
 import javax.swing.event.ListDataListener;
 import java.awt.*;
@@ -36,7 +38,7 @@ public class ClientChat {
     public static void main(String[] args) throws Exception{
 
 
-
+        final UserSettings userSettings=new UserSettings();
 
         JFrame frame = new JFrame("ClientChat");
 
@@ -68,6 +70,34 @@ public class ClientChat {
 
         //回车监听
 
+        JButton jButton_HideIp=clientChat.hideIPButton;
+        jButton_HideIp.addMouseListener(new MouseListener() {
+            public void mouseClicked(MouseEvent e) {
+
+            }
+
+            public void mousePressed(MouseEvent e) {
+                userSettings.setHidemyIp(!userSettings.getHidemyIp());
+                if (userSettings.getHidemyIp()){
+                    jTextArea_chat.append("已设置隐藏ip, 若已设置昵称 需要重新设置昵称\n");
+                    userSettings.setUserName(null);
+                }else{
+                    jTextArea_chat.append("已显示ip\n");
+                }
+            }
+
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
 
         JButton jButton_Nickname=clientChat.nicknameButton;
         jButton_Nickname.addMouseListener(new MouseListener() {
@@ -76,7 +106,8 @@ public class ClientChat {
             }
 
             public void mousePressed(MouseEvent e) {
-//                username=JOptionPane.showInputDialog("输入自定义昵称");
+                userSettings.setUserName(JOptionPane.showInputDialog("输入自定义昵称"));
+                jTextArea_chat.append("已设置昵称"+userSettings.getUserName()+"\n");
             }
 
             public void mouseReleased(MouseEvent e) {
@@ -147,11 +178,13 @@ public class ClientChat {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode()== KeyEvent.VK_ENTER){
                     String pure_message= jTextArea_message.getText();
-//
-//                if (setname){
-//                    raw_Data="[with_name]"+username+"@"+raw_Data;
-//
-//                }
+
+                if (userSettings.getUserName()!=null){
+                    pure_message="[with_name]"+userSettings.getUserName()+"@"+pure_message;
+                }
+                if (userSettings.getHidemyIp()){
+                    pure_message="UserCommand.NoNameSend#"+pure_message;
+                }
                     try {
                         byte[] bytes=pure_message.getBytes ("UTF-8");
                         DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length,InetAddress.getByName(serverIP),2112);
@@ -174,12 +207,6 @@ public class ClientChat {
 
 
 
-
-
-
-
-
-
 //        接收服务器数据
         try{
             jTextArea_chat.append("开始接收服务器数据\n=============\n");
@@ -187,7 +214,7 @@ public class ClientChat {
             byte[] bytes_from_server=new byte[1024];
             DatagramPacket datagramPacket=new DatagramPacket(bytes_from_server,bytes_from_server.length);
 
-            String username;
+
             ArrayList arr_ip=new ArrayList();
             ListModel listModel_ip=new DefaultListModel();
             jList_iplist.setModel(listModel_ip);
@@ -213,8 +240,9 @@ public class ClientChat {
                 if(message_pure.startsWith("[with_name]")){
                     if(message_pure.contains("@")){
                         message_pure=message_pure.replace("[with_name]","");
-                        username=message_pure.split("@")[0];
-                        jTextArea_chat.append("来自 "+username+"\n");
+                        userSettings.setUserName(message_pure.split("@")[0]);
+
+                        jTextArea_chat.append("来自 "+userSettings.getUserName()+"\n");
                         jTextArea_chat.append(message_pure.split("@")[1]+"\n");
                         continue;
                     }
