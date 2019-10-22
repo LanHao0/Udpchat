@@ -7,20 +7,17 @@
 
 
 
+import club.lanhaoo.chat.Message;
+import club.lanhaoo.chat.SingleTalk;
 import club.lanhaoo.chat.UserSettings;
 
 import javax.swing.*;
-import javax.swing.event.ListDataListener;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Date;
 
 public class ClientChat {
     private JTextArea textArea1_chat;
@@ -48,7 +45,7 @@ public class ClientChat {
         final JTextArea jTextArea_chat=clientChat.textArea1_chat;
         final JTextArea jTextArea_message=clientChat.textArea_message;
 
-        JList jList_iplist=clientChat.list1;
+        final JList jList_iplist=clientChat.list1;
         JButton jButton_send=clientChat.sendButton;
 
         JScrollPane jScrollPane=clientChat.scrollPane1;
@@ -127,9 +124,11 @@ public class ClientChat {
 
         jTextArea_chat.append("开始客户端，将使用端口2113\n");
         final String serverIP=JOptionPane.showInputDialog("服务器地址");
+
+        userSettings.setServerIp(serverIP);
         jTextArea_chat.append("将使用 " +serverIP +" 作为服务器地址\n");
 
-        final DatagramSocket datagramSocket2=new DatagramSocket(2113);
+
         //        发送按钮监听
         jButton_send.addMouseListener(new MouseListener() {
             public void mouseClicked(MouseEvent e) {
@@ -143,14 +142,14 @@ public class ClientChat {
 //                    raw_Data="[with_name]"+username+"@"+raw_Data;
 //
 //                }
-                try {
-                    byte[] bytes=pure_message.getBytes ("UTF-8");
-                    DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length,InetAddress.getByName(serverIP),2112);
 
-                    datagramSocket2.send(datagramPacket);
+                long mtime= new Date().getTime();
+                Message message=new Message("text","",pure_message,String.valueOf(mtime));
+
+                if (message.send(userSettings)){
                     jTextArea_message.setText(null);
-                }catch (Exception e1){
-
+                }else {
+                    jTextArea_chat.append("发送失败\n");
                 }
 
 
@@ -177,23 +176,18 @@ public class ClientChat {
 
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode()== KeyEvent.VK_ENTER){
+
                     String pure_message= jTextArea_message.getText();
 
-                if (userSettings.getUserName()!=null){
-                    pure_message="[with_name]"+userSettings.getUserName()+"@"+pure_message;
-                }
-                if (userSettings.getHidemyIp()){
-                    pure_message="UserCommand.NoNameSend#"+pure_message;
-                }
-                    try {
-                        byte[] bytes=pure_message.getBytes ("UTF-8");
-                        DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length,InetAddress.getByName(serverIP),2112);
-
-                        datagramSocket2.send(datagramPacket);
+                    long mtime= new Date().getTime();
+                    Message message=new Message("text","",pure_message,String.valueOf(mtime));
+                    if (message.send(userSettings)){
                         jTextArea_message.setText(null);
-                    }catch (Exception e1){
-
+                    }else {
+                        jTextArea_chat.append("发送失败\n");
                     }
+
+
                 }
             }
 
@@ -201,9 +195,6 @@ public class ClientChat {
 
             }
         });
-
-
-
 
 
 
@@ -216,8 +207,23 @@ public class ClientChat {
 
 
             ArrayList arr_ip=new ArrayList();
-            ListModel listModel_ip=new DefaultListModel();
+            final ListModel listModel_ip=new DefaultListModel();
             jList_iplist.setModel(listModel_ip);
+            //设置list模型
+            jList_iplist.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    super.mouseClicked(e);
+                    if (e.getClickCount()==2){
+                        int list_index=jList_iplist.locationToIndex(e.getPoint());
+                        System.out.println("点击的是"+ list_index);
+                        SingleTalk singleTalk=new SingleTalk();
+                        System.out.println(((DefaultListModel) listModel_ip).get(list_index));
+                        singleTalk.openWindow(((DefaultListModel) listModel_ip).get(list_index).toString(),userSettings);
+                    }
+                }
+            });
+
             JScrollBar jScrollBar_chat=jScrollPane.getVerticalScrollBar();
 
             while (true){
@@ -233,8 +239,6 @@ public class ClientChat {
                     arr_ip.add(fromip);
                     ((DefaultListModel) listModel_ip).addElement(fromip);
                 }
-
-
 
 
                 if(message_pure.startsWith("[with_name]")){

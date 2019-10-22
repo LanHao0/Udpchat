@@ -11,6 +11,16 @@ public class UserSettings {
     private String UserName;
     private boolean HidemyIp;
 
+    public void setServerIp(String serverIp) {
+        ServerIp = serverIp;
+    }
+
+    public String getServerIp() {
+        return ServerIp;
+    }
+
+    private String ServerIp;
+
     public String getUserName() {
         return UserName;
     }
