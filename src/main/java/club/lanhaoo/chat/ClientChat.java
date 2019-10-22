@@ -1,4 +1,4 @@
-/**
+package club.lanhaoo.chat; /**
  * @Author: LanHao
  * @Website:https://lanhaoo.club/
  * @Created_Date:8:49 PM_9/29/2019
@@ -6,10 +6,6 @@
  */
 
 
-
-import club.lanhaoo.chat.Message;
-import club.lanhaoo.chat.SingleTalk;
-import club.lanhaoo.chat.UserSettings;
 
 import javax.swing.*;
 import java.awt.*;
@@ -31,6 +27,7 @@ public class ClientChat {
     private JButton hideIPButton;
     private JTextArea textArea_message;
     private JScrollPane jscrollpane_message;
+    private JButton serverIPButton;
 
     public static void main(String[] args) throws Exception{
 
@@ -65,8 +62,32 @@ public class ClientChat {
         jTextArea_message.grabFocus();
         //获取焦点
 
-        //回车监听
+        JButton jButton_severIP=clientChat.serverIPButton;
+        jButton_severIP.addMouseListener(new MouseListener() {
+            public void mouseClicked(MouseEvent e) {
 
+            }
+
+            public void mousePressed(MouseEvent e) {
+                userSettings.setServerIp(JOptionPane.showInputDialog("重设服务器IP:"));
+            }
+
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
+
+
+
+        //回车监听
         JButton jButton_HideIp=clientChat.hideIPButton;
         jButton_HideIp.addMouseListener(new MouseListener() {
             public void mouseClicked(MouseEvent e) {

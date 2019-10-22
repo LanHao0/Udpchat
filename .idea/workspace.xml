@@ -9,13 +9,10 @@
     <bookmark url="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/client.java" line="76" mnemonic="3" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2e0821c8-3540-4899-9e60-532eb45e36b8" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/SingleTalk.form" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/SingleTalk.java" afterDir="false" />
+    <list default="true" id="2e0821c8-3540-4899-9e60-532eb45e36b8" name="Default Changelist" comment="ClientChat UI界面&#10;双击Ip可以进入私聊界面&#10;&#10;消息重构为对象, 程序更加面向对象">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ClientChat.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ClientChat.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/Message.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/Message.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/UserSettings.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/UserSettings.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ClientChat.form" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/ClientChat.form" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ClientChat.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/ClientChat.java" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <ignored path="$PROJECT_DIR$/target/" />
@@ -48,23 +45,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/ClientChat.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="607">
-              <caret line="235" column="56" lean-forward="true" selection-start-line="235" selection-start-column="56" selection-end-line="235" selection-end-column="56" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/Message.java">
+        <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/ClientChat.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="95">
-              <caret line="47" column="34" selection-start-line="47" selection-start-column="34" selection-end-line="47" selection-end-column="34" />
+            <state relative-caret-position="399">
+              <caret line="65" column="8" selection-start-line="65" selection-start-column="8" selection-end-line="65" selection-end-column="8" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -73,62 +58,8 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/SingleTalk.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="150">
-              <caret line="46" column="43" lean-forward="true" selection-start-line="46" selection-start-column="43" selection-end-line="46" selection-end-column="43" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/SingleTalk.form">
+        <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/ClientChat.form">
           <provider selected="true" editor-type-id="ui-designer" />
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/server.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="216">
-              <caret line="84" column="60" selection-start-line="84" selection-start-column="60" selection-end-line="84" selection-end-column="60" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/UserSettings.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="105">
-              <caret line="13" column="46" selection-start-line="13" selection-start-column="46" selection-end-line="13" selection-end-column="46" />
-              <folding>
-                <element signature="e#319#320#0" expanded="true" />
-                <element signature="e#271#272#0" expanded="true" />
-                <element signature="e#302#303#0" expanded="true" />
-                <element signature="e#271#272#0" expanded="true" />
-                <element signature="e#302#303#0" expanded="true" />
-                <element signature="e#350#351#0" expanded="true" />
-                <element signature="e#385#386#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/client.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="121">
-              <caret line="57" column="82" lean-forward="true" selection-start-line="57" selection-start-column="82" selection-end-line="57" selection-end-column="82" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
         </entry>
       </file>
     </leaf>
@@ -188,6 +119,8 @@
         <option value="$PROJECT_DIR$/src/main/java/ClientChat.java" />
         <option value="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/SingleTalk.java" />
         <option value="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/Message.java" />
+        <option value="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/ClientChat.form" />
+        <option value="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/ClientChat.java" />
       </list>
     </option>
   </component>
@@ -243,14 +176,6 @@
               <item name="main" type="462c0819:PsiDirectoryNode" />
               <item name="java" type="462c0819:PsiDirectoryNode" />
               <item name="chat" type="462c0819:PsiDirectoryNode" />
-              <item name="SingleTalk" type="e9f4de52:FormNode" />
-            </path>
-            <path>
-              <item name="udpchat" type="b2602c69:ProjectViewProjectNode" />
-              <item name="udpchat" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
               <item name="ClientChat" type="e9f4de52:FormNode" />
             </path>
           </expand>
@@ -268,7 +193,7 @@
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="aspect.path.notification.shown" value="true" />
-    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1571755824092" />
+    <property name="com.android.tools.idea.instantapp.provision.ProvisionBeforeRunTaskProvider.myTimeStamp" value="1571756529638" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/gson-2.8.5.jar!/" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
@@ -289,7 +214,20 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Application.ClientChat">
+  <component name="RunManager" selected="Application.ClientChat (1)">
+    <configuration name="ClientChat (1)" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="club.lanhaoo.chat.ClientChat" />
+      <module name="udpchat" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="club.lanhaoo.chat.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="ClientChat" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="ClientChat" />
       <module name="udpchat" />
@@ -315,9 +253,11 @@
       <item itemvalue="Application.client" />
       <item itemvalue="Application.server" />
       <item itemvalue="Application.ClientChat" />
+      <item itemvalue="Application.ClientChat (1)" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.ClientChat (1)" />
         <item itemvalue="Application.ClientChat" />
         <item itemvalue="Application.server" />
         <item itemvalue="Application.client" />
@@ -351,7 +291,7 @@
       <workItem from="1571289769260" duration="10535000" />
       <workItem from="1571576317324" duration="2801000" />
       <workItem from="1571746642604" duration="1615000" />
-      <workItem from="1571749133012" duration="6566000" />
+      <workItem from="1571749133012" duration="7274000" />
     </task>
     <task id="LOCAL-00001" summary="第一版聊天室&#10;实现一人聊天，全服务器广播&#10;有超级命令和一般用户命令">
       <created>1560788572489</created>
@@ -402,11 +342,18 @@
       <option name="project" value="LOCAL" />
       <updated>1571580431325</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="ClientChat UI界面&#10;双击Ip可以进入私聊界面&#10;&#10;消息重构为对象, 程序更加面向对象">
+      <created>1571755990768</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1571755990768</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="54731000" />
+    <option name="totallyTimeSpent" value="55439000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -421,7 +368,7 @@
     <frame x="67" y="-8" width="1307" height="784" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" sideWeight="0.49462366" visible="true" weight="0.2149158" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" sideWeight="0.49462366" visible="true" weight="0.2149158" />
       <window_info id="Structure" order="1" sideWeight="0.50537634" side_tool="true" weight="0.156" />
       <window_info id="Image Layers" order="2" />
       <window_info id="Designer" order="3" />
@@ -430,7 +377,7 @@
       <window_info id="Favorites" order="6" sideWeight="0.5011442" side_tool="true" weight="0.24979855" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32872504" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.31643626" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.31643626" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -535,7 +482,8 @@
     <MESSAGE value="修复&#10;服务端编码问题" />
     <MESSAGE value="ClientChat UI界面&#10;实现发送接收消息,显示所有IP列表" />
     <MESSAGE value="ClientChat UI界面&#10;实现设置姓名, 隐藏ip" />
-    <option name="LAST_COMMIT_MESSAGE" value="ClientChat UI界面&#10;实现设置姓名, 隐藏ip" />
+    <MESSAGE value="ClientChat UI界面&#10;双击Ip可以进入私聊界面&#10;&#10;消息重构为对象, 程序更加面向对象" />
+    <option name="LAST_COMMIT_MESSAGE" value="ClientChat UI界面&#10;双击Ip可以进入私聊界面&#10;&#10;消息重构为对象, 程序更加面向对象" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/.idea/vcs.xml">
@@ -582,9 +530,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/ClientChat.form">
-      <provider selected="true" editor-type-id="ui-designer" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/SingleTalk.form">
       <provider selected="true" editor-type-id="ui-designer" />
     </entry>
@@ -614,26 +559,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/SingleTalk.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="46" column="43" lean-forward="true" selection-start-line="46" selection-start-column="43" selection-end-line="46" selection-end-column="43" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/java/ClientChat.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="607">
-          <caret line="235" column="56" lean-forward="true" selection-start-line="235" selection-start-column="56" selection-end-line="235" selection-end-column="56" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/client.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="121">
@@ -644,10 +569,33 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/SingleTalk.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="207">
+          <caret line="46" column="43" lean-forward="true" selection-start-line="46" selection-start-column="43" selection-end-line="46" selection-end-column="43" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/Message.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="95">
-          <caret line="47" column="34" selection-start-line="47" selection-start-column="34" selection-end-line="47" selection-end-column="34" />
+          <caret line="47" column="39" selection-start-line="47" selection-start-column="39" selection-end-line="47" selection-end-column="39" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/ClientChat.form">
+      <provider selected="true" editor-type-id="ui-designer" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/ClientChat.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="399">
+          <caret line="65" column="8" selection-start-line="65" selection-start-column="8" selection-end-line="65" selection-end-column="8" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
