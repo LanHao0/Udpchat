@@ -53,6 +53,7 @@ public class ClientChat {
 
         frame.setContentPane(jPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
        //设置居中
         Point point = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
         frame.setBounds(point.x - 600 / 2, point.y - 400 / 2, 600, 400);
