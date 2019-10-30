@@ -1,42 +1,48 @@
 package club.lanhaoo.chat.HttpFileShare;
 
+import com.google.gson.Gson;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 public class MyFile {
     public String getRoots(){
         File[] roots=File.listRoots();
         String string_return="";
+        ArrayList<MyEveryFileProperties> arrayList=new ArrayList<MyEveryFileProperties>();
+
         for (File file : roots) {
-            System.out.println(file.getPath());
-            string_return+="<a href='./?filepath="+file.getPath()+"'>"+file.getPath()+"</a><br>";
+            arrayList.add(new MyEveryFileProperties(file.getPath(),file.getPath()));
         }
-        return string_return;
+        Gson gson=new Gson();
+
+
+        return gson.toJson(arrayList);
     }
 
 
     public String listFilesForFolder(final File folder) {
 
-            String return_String = "";
-            if (folder.getParent() != null) {
-                return_String += "<a href='./?filepath=" + folder.getParent() + "'>./</a><br>";
-            } else {
-                return_String += "<a href='./'>./</a><br>";
-            }
+        String return_String = "";
+        ArrayList<MyEveryFileProperties> arrayList = new ArrayList<MyEveryFileProperties>();
 
-            for (final File fileEntry : folder.listFiles()) {
+//        if (folder.getParent() != null) {
+//            arrayList.add(new MyEveryFileProperties(folder.getParent(),"./"));
+//        } else {
+//            arrayList.add(new MyEveryFileProperties("./","./"));
+//
+//        }
 
-                    System.out.println(fileEntry.getName());
-                    return_String += "<a href='./?filepath=" + fileEntry.getAbsolutePath() + "'>" + fileEntry.getName() + "</a><br>";
+        for (final File fileEntry : folder.listFiles()) {
+            arrayList.add(new MyEveryFileProperties(fileEntry.getAbsolutePath(), fileEntry.getName()));
+        }
+        Gson gson = new Gson();
 
-
-            }
-
-            return return_String;
+        return gson.toJson(arrayList);
 
 
     }

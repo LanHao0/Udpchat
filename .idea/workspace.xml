@@ -6,35 +6,14 @@
     </artifacts-to-build>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2e0821c8-3540-4899-9e60-532eb45e36b8" name="Default Changelist" comment="ClientChat UI界面&#10;双击Ip可以进入私聊界面&#10;&#10;消息重构为对象, 程序更加面向对象">
-      <change afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_nanohttpd_nanohttpd_2_2_0.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/App.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/MyFile.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/bootstrap.min.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/bootstrap.min.css.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/bootstrap.min.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/bootstrap.min.js.map" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/index.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/jquary34.js" afterDir="false" />
+    <list default="true" id="2e0821c8-3540-4899-9e60-532eb45e36b8" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__com_google_code_gson_gson_2_8_6.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/MyEveryFileProperties.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/META-INF/udpchat.kotlin_module" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/club/lanhaoo/chat/client.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/club/lanhaoo/chat/clientReceiveThread.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/club/lanhaoo/chat/server.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/com/intellij/uiDesigner/core/AbstractLayout.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/com/intellij/uiDesigner/core/DimensionInfo.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/com/intellij/uiDesigner/core/GridConstraints.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/com/intellij/uiDesigner/core/GridLayoutManager.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/com/intellij/uiDesigner/core/HorizontalInfo.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/com/intellij/uiDesigner/core/LayoutState.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/com/intellij/uiDesigner/core/Spacer.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/com/intellij/uiDesigner/core/SupportCode$TextWithMnemonic.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/com/intellij/uiDesigner/core/SupportCode.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/com/intellij/uiDesigner/core/Util.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/out/production/udpchat/com/intellij/uiDesigner/core/VerticalInfo.class" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/ClientChat.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/ClientChat.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/App.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/App.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/MyFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/MyFile.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/udpchat.iml" beforeDir="false" afterPath="$PROJECT_DIR$/udpchat.iml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -69,8 +48,8 @@
       <list>
         <option value="package.json" />
         <option value="Gradle Kotlin DSL Build Script" />
-        <option value="Class" />
         <option value="HTML File" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -125,6 +104,7 @@
     <property name="project.structure.last.edited" value="Modules" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
+    <property name="restartRequiresConfirmation" value="false" />
     <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
   </component>
   <component name="RunDashboard">
@@ -243,7 +223,7 @@
       <workItem from="1572354480287" duration="108000" />
       <workItem from="1572354639510" duration="787000" />
       <workItem from="1572356801905" duration="253000" />
-      <workItem from="1572357114568" duration="9669000" />
+      <workItem from="1572357114568" duration="20041000" />
     </task>
     <task id="LOCAL-00001" summary="第一版聊天室&#10;实现一人聊天，全服务器广播&#10;有超级命令和一般用户命令">
       <created>1560788572489</created>
@@ -301,7 +281,14 @@
       <option name="project" value="LOCAL" />
       <updated>1571755990768</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="迁移项目到Maven&#10;&#10;开发功能 局域网共享 基于Nanohttp&#10;界面优化中">
+      <created>1572367098725</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1572367098725</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TodoView">
@@ -354,6 +341,7 @@
     <MESSAGE value="ClientChat UI界面&#10;实现发送接收消息,显示所有IP列表" />
     <MESSAGE value="ClientChat UI界面&#10;实现设置姓名, 隐藏ip" />
     <MESSAGE value="ClientChat UI界面&#10;双击Ip可以进入私聊界面&#10;&#10;消息重构为对象, 程序更加面向对象" />
-    <option name="LAST_COMMIT_MESSAGE" value="ClientChat UI界面&#10;双击Ip可以进入私聊界面&#10;&#10;消息重构为对象, 程序更加面向对象" />
+    <MESSAGE value="迁移项目到Maven&#10;&#10;开发功能 局域网共享 基于Nanohttp&#10;界面优化中" />
+    <option name="LAST_COMMIT_MESSAGE" value="迁移项目到Maven&#10;&#10;开发功能 局域网共享 基于Nanohttp&#10;界面优化中" />
   </component>
 </project>

@@ -36,44 +36,50 @@ public class App extends NanoHTTPD {
         Map<String, String> parms = session.getParms();
         String msg = "";
 
-//        get css
+//       #======= get css & js & json_data
         if (parms.get("getcss")!=null){
             msg=new MyFile().getResString("bootstrap.min.css");
             return newFixedLengthResponse(Response.Status.OK,"text/css",msg);
         }
-
-        msg=new MyFile().getResString("index.html");
-        MyFile myFile=new MyFile();
-
-        if (parms.get("filepath") == null) {
-            msg=msg.replace("replace_folder", myFile.getRoots());
-        } else {
-            File file=new File(parms.get("filepath"));
-            if (file.isFile()){
-                String MIME_TYPE="";
-                FileInputStream fis = null;
-                Response response= null;
-                try {
-                    fis = new FileInputStream(file);
-
-                    MIME_TYPE= URLConnection.guessContentTypeFromName(file.getName());
-                    response = newFixedLengthResponse(Response.Status.OK,MIME_TYPE,fis,fis.getChannel().size());
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }catch (IOException e){
-
-                }
-                response.addHeader("Content-Disposition:","attachment; filename=\""+  URLEncoder.encode(file.getName())+"\"");
-
-                return response;
-            }
-            msg=msg.replace("replace_folder",myFile.listFilesForFolder(new File(parms.get("filepath"))));
-            msg=msg.replace("replace_all",myFile.listFilesForFolder(new File(parms.get("filepath"))));
-//            msg+=myFile.listFilesForFolder(new File(parms.get("filepath")));
+        if (parms.get("getjq")!=null){
+            msg=new MyFile().getResString("jquary34.js");
+            return newFixedLengthResponse(Response.Status.OK,"text/javascript",msg);
+        }
+        if (parms.get("getcssjs")!=null){
+            msg=new MyFile().getResString("bootstrap.min.js");
+            return newFixedLengthResponse(Response.Status.OK,"text/javascript",msg);
         }
 
+        if (parms.get("getjson")!=null){
+            MyFile myFile=new MyFile();
+            if (parms.get("filepath") == null) {
+                msg=myFile.getRoots();
+            } else {
+                File file=new File(parms.get("filepath"));
+                if (file.isFile()){
+                    String MIME_TYPE="";
+                    FileInputStream fis = null;
+                    Response response= null;
+                    try {
+                        fis = new FileInputStream(file);
+                        MIME_TYPE= URLConnection.guessContentTypeFromName(file.getName());
+                        response = newFixedLengthResponse(Response.Status.OK,MIME_TYPE,fis,fis.getChannel().size());
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }catch (IOException e){ }
+                    response.addHeader("Content-Disposition:","attachment; filename=\""+  URLEncoder.encode(file.getName())+"\"");
+
+                    return response;
+                }
+                msg=myFile.listFilesForFolder(new File(parms.get("filepath")));
+
+            }
+            return newFixedLengthResponse(Response.Status.OK,"text/json",msg);
+        }
+//      #===========
 
 
+        msg=new MyFile().getResString("index.html");
         return newFixedLengthResponse(msg);
     }
 

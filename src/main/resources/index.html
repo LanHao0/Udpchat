@@ -4,29 +4,108 @@
     <meta charset="UTF-8">
     <title>局域网连接</title>
     <link rel="stylesheet" href="./?getcss=bootstrap.css">
-    <script type="application/javascript" src="./css_js/jquary34.js"></script>
-    <script type="application/javascript" src="./css_js/bootstrap.min.js"></script>
+    <script type="application/javascript" src="./?getjq=jquary34.js"></script>
+    <script type="application/javascript" src="./?getcssjs=bootstrap.min.js"></script>
+    <script>
+        function Get(url) {
+            let xmlhttprequest=new XMLHttpRequest();
+            let tt=new Date();
+            xmlhttprequest.open("GET",url+"&time="+tt.getTime(),false);
+            xmlhttprequest.send(null);
+            return xmlhttprequest.responseText;
+        }
+        function enter(filepath,filename) {
+            // https://stackoverflow.com/questions/2385113/howto-div-with-onclick-inside-another-div-with-onclick-javascript
+            if (!e) var e = window.event;
+            e.cancelBubble = true;
+            if (e.stopPropagation) e.stopPropagation();
+
+            let isopen=document.getElementById(filepath).getAttribute("data-expend");
+            if (isopen=="opened"){
+                document.getElementById(filepath).setAttribute("class","col-12 card");
+                document.getElementById(filepath).innerHTML=decodeURI(filename);
+                document.getElementById(filepath).setAttribute("data-expend","closed");
+            }else{
+                document.getElementById(filepath).setAttribute("class","col-12 card shadow-lg");
+
+                let json_raw_data=Get("./?getjson=1&filepath="+filepath);
+                fill_html(json_raw_data,filepath);
+                document.getElementById(filepath).setAttribute("data-expend","opened");
+            }
+
+
+        }
+
+        function fill_html(json,element_id) {
+            let json_raw_data=JSON.parse(json);
+            let fill_div=document.getElementById(element_id);
+
+            let fill_string_folder="";
+            for(let i=0;i<json_raw_data.length;i++){
+                // replace_string_folder+="<a href='./?filepath="+json_raw_data[i].filepath+"'>"+json_raw_data[i].filename+"</a><br>";
+                // console.log(json_raw_data[i].filepath);
+                let filename=encodeURI(json_raw_data[i].filename);
+                let filepath=encodeURI(json_raw_data[i].filepath);
+                fill_string_folder+="<div class='col-12 card overflow-hidden' onclick='enter(\""+filepath+"\",\""+filename+"\");' id='"+filepath+"'>" +
+                    "             "+json_raw_data[i].filename+
+                    "              </div>"
+
+            }
+            fill_div.innerHTML+=fill_string_folder;
+        }
+
+        
+        function change_html(folder_json) {
+            let div_replace_folder=document.getElementById("div_replace_folder");
+            let div_replace_all=document.getElementById("div_replace_all");
+
+            let json_raw_data=JSON.parse(folder_json);
+            let replace_string_folder="";
+            for(let i=0;i<json_raw_data.length;i++){
+                let filename=encodeURI(json_raw_data[i].filename);
+                let filepath=encodeURI(json_raw_data[i].filepath);
+                // replace_string_folder+="<a href='./?filepath="+json_raw_data[i].filepath+"'>"+json_raw_data[i].filename+"</a><br>";
+                // console.log(json_raw_data[i].filepath);
+                replace_string_folder+="<div class='col-12 card' onclick='enter(\""+filepath+"\",\""+filename+"\");' id='"+filepath+"'>" +
+                        "             "+json_raw_data[i].filename+
+                        "              </div>" 
+                
+            }
+            div_replace_folder.innerHTML=replace_string_folder;
+        }
+
+        function f() {
+            let json_raw_data=Get("./?getjson=1");
+            change_html(json_raw_data);
+        }
+    </script>
+    <style>
+
+        .card{
+            transition: all 1s;
+        }
+    </style>
 </head>
-<body>
-    <div class="container">
+<body onload="f();">
+    <div class="container-fluid">
         <br>
         <div class="card shadow">
             <div class="card-body">
                 <h3 class="card-title">局域网分享</h3>
                 <hr>
                 <div class="row">
-                    <div class="col-md-3">
+                    <div class="col-md-5">
                         <p class="text-secondary">文件夹列表</p>
-                        <div class="card">
-                            <div class="card-body overflow-auto">
+                        <div class="card shadow-sm">
+                            <div class="card-body overflow-auto" id="div_replace_folder">
                                 replace_folder
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-9">
+                    <div class="col-md-7">
                         <p class="text-secondary">详细</p>
-                        <div class="card">
-                            <div class="card-body overflow-auto">
+                        <div class="card shadow-sm">
+                            <div class="card-body overflow-auto" id="div_replace_all">
                                 replace_all
                             </div>
                         </div>
