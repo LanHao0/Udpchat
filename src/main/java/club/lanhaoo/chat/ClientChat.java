@@ -7,11 +7,17 @@ package club.lanhaoo.chat; /**
 
 
 
+import club.lanhaoo.chat.HttpFileShare.App;
+import fi.iki.elonen.NanoHTTPD;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -28,6 +34,7 @@ public class ClientChat {
     private JTextArea textArea_message;
     private JScrollPane jscrollpane_message;
     private JButton serverIPButton;
+    private JButton fileShareButton;
 
     public static void main(String[] args) throws Exception{
 
@@ -141,7 +148,49 @@ public class ClientChat {
 
             }
         });
+        final JButton jButton_fileShare=clientChat.fileShareButton;
 
+        jButton_fileShare.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                try {
+
+                    App app= new App();
+
+                    app.setWebpassword(JOptionPane.showInputDialog("设置密码?"));
+
+                    app.start(NanoHTTPD.SOCKET_READ_TIMEOUT,false);
+
+                    jTextArea_chat.append("开始分享文件,ip地址: "+ InetAddress.getLocalHost().getHostAddress()+":8089");
+                    jButton_fileShare.setText("停止分享文件");
+
+
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
 
 
         jTextArea_chat.append("开始客户端，将使用端口2113\n");

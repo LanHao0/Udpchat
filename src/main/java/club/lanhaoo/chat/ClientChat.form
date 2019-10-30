@@ -98,6 +98,16 @@
               <text value="serverIP"/>
             </properties>
           </component>
+          <component id="f520e" class="javax.swing.JToolBar$Separator">
+            <constraints/>
+            <properties/>
+          </component>
+          <component id="2b0e9" class="javax.swing.JButton" binding="fileShareButton" default-binding="true">
+            <constraints/>
+            <properties>
+              <text value="FileShare"/>
+            </properties>
+          </component>
         </children>
       </toolbar>
       <scrollpane id="cdf45" binding="jscrollpane_message">

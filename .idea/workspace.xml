@@ -6,16 +6,7 @@
     </artifacts-to-build>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2e0821c8-3540-4899-9e60-532eb45e36b8" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__com_google_code_gson_gson_2_8_6.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/MyEveryFileProperties.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/App.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/App.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/MyFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/MyFile.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/udpchat.iml" beforeDir="false" afterPath="$PROJECT_DIR$/udpchat.iml" afterDir="false" />
-    </list>
+    <list default="true" id="2e0821c8-3540-4899-9e60-532eb45e36b8" name="Default Changelist" comment="" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,8 +39,8 @@
       <list>
         <option value="package.json" />
         <option value="Gradle Kotlin DSL Build Script" />
-        <option value="HTML File" />
         <option value="Class" />
+        <option value="HTML File" />
       </list>
     </option>
   </component>
@@ -119,7 +110,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Application.App">
+  <component name="RunManager" selected="Application.ClientChat (1)">
     <configuration name="App" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="club.lanhaoo.chat.HttpFileShare.App" />
       <module name="udpchat" />
@@ -182,8 +173,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.App" />
         <item itemvalue="Application.ClientChat (1)" />
+        <item itemvalue="Application.App" />
         <item itemvalue="Application.MainWindow" />
         <item itemvalue="Application.ClientChat" />
         <item itemvalue="Application.server" />
@@ -223,7 +214,8 @@
       <workItem from="1572354480287" duration="108000" />
       <workItem from="1572354639510" duration="787000" />
       <workItem from="1572356801905" duration="253000" />
-      <workItem from="1572357114568" duration="20041000" />
+      <workItem from="1572357114568" duration="21805000" />
+      <workItem from="1572436025099" duration="7917000" />
     </task>
     <task id="LOCAL-00001" summary="第一版聊天室&#10;实现一人聊天，全服务器广播&#10;有超级命令和一般用户命令">
       <created>1560788572489</created>
@@ -288,7 +280,21 @@
       <option name="project" value="LOCAL" />
       <updated>1572367098725</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="开发功能&#10;重构文件分享代码,网页基于ajax">
+      <created>1572410734549</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1572410734549</updated>
+    </task>
+    <task id="LOCAL-00011" summary="新增 文件分享功能,可设置密码">
+      <created>1572444975826</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1572444975826</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TodoView">
@@ -342,6 +348,8 @@
     <MESSAGE value="ClientChat UI界面&#10;实现设置姓名, 隐藏ip" />
     <MESSAGE value="ClientChat UI界面&#10;双击Ip可以进入私聊界面&#10;&#10;消息重构为对象, 程序更加面向对象" />
     <MESSAGE value="迁移项目到Maven&#10;&#10;开发功能 局域网共享 基于Nanohttp&#10;界面优化中" />
-    <option name="LAST_COMMIT_MESSAGE" value="迁移项目到Maven&#10;&#10;开发功能 局域网共享 基于Nanohttp&#10;界面优化中" />
+    <MESSAGE value="开发功能&#10;重构文件分享代码,网页基于ajax" />
+    <MESSAGE value="新增 文件分享功能,可设置密码" />
+    <option name="LAST_COMMIT_MESSAGE" value="新增 文件分享功能,可设置密码" />
   </component>
 </project>

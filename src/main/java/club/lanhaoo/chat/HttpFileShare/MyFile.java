@@ -25,20 +25,19 @@ public class MyFile {
     }
 
 
-    public String listFilesForFolder(final File folder) {
+    public String listFilesForFolder(final File folder,Boolean onlyFolder) {
 
-        String return_String = "";
         ArrayList<MyEveryFileProperties> arrayList = new ArrayList<MyEveryFileProperties>();
 
-//        if (folder.getParent() != null) {
-//            arrayList.add(new MyEveryFileProperties(folder.getParent(),"./"));
-//        } else {
-//            arrayList.add(new MyEveryFileProperties("./","./"));
-//
-//        }
-
         for (final File fileEntry : folder.listFiles()) {
-            arrayList.add(new MyEveryFileProperties(fileEntry.getAbsolutePath(), fileEntry.getName()));
+            if (onlyFolder){
+                if (!fileEntry.isFile()){
+                    arrayList.add(new MyEveryFileProperties(fileEntry.getAbsolutePath(), fileEntry.getName()));
+                }
+            }else{
+                arrayList.add(new MyEveryFileProperties(fileEntry.getAbsolutePath(), fileEntry.getName()));
+            }
+
         }
         Gson gson = new Gson();
 
