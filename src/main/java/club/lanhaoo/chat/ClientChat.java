@@ -8,6 +8,7 @@ package club.lanhaoo.chat; /**
 
 
 import club.lanhaoo.chat.HttpFileShare.App;
+import com.google.gson.Gson;
 import fi.iki.elonen.NanoHTTPD;
 
 import javax.swing.*;
@@ -252,6 +253,8 @@ public class ClientChat {
 
                     long mtime= new Date().getTime();
                     Message message=new Message("text","",pure_message,String.valueOf(mtime));
+                    message.setFromIp(Server.getIpAddress());
+
                     if (message.send(userSettings)){
                         jTextArea_message.setText(null);
                     }else {
@@ -303,12 +306,12 @@ public class ClientChat {
 
                 String message_pure=new String(datagramPacket.getData(),0,datagramPacket.getLength(),"UTF-8");
 
-                String fromip=message_pure.split("&")[1];
-                message_pure=message_pure.split("&")[0];
+                Gson gson=new Gson();
+                Message message=gson.fromJson(message_pure,Message.class);
 
-                if (!arr_ip.contains(fromip)) {
-                    arr_ip.add(fromip);
-                    ((DefaultListModel) listModel_ip).addElement(fromip);
+                if (!arr_ip.contains(message.getFromIp())) {
+                    arr_ip.add(message.getFromIp());
+                    ((DefaultListModel) listModel_ip).addElement(message.getFromIp());
                 }
 
 
@@ -324,8 +327,8 @@ public class ClientChat {
                 }
 
 
-                jTextArea_chat.append("来自 "+fromip+"\n");
-                jTextArea_chat.append(message_pure+"\n\n");
+                jTextArea_chat.append("来自 "+message.getFromIp()+"\n");
+                jTextArea_chat.append(message.getContent()+"\n\n");
 
                 jScrollBar_chat.validate();
                 jScrollBar_chat.setValue(jScrollBar_chat.getMaximum());

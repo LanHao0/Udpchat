@@ -6,7 +6,13 @@
     </artifacts-to-build>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="2e0821c8-3540-4899-9e60-532eb45e36b8" name="Default Changelist" comment="" />
+    <list default="true" id="2e0821c8-3540-4899-9e60-532eb45e36b8" name="Default Changelist" comment="ClientChat UI界面&#10;双击Ip可以进入私聊界面&#10;&#10;消息重构为对象, 程序更加面向对象">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/ClientChat.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/ClientChat.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/Message.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/Message.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/clientReceiveThread.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/clientReceiveThread.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/server.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/Server.java" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,6 +65,9 @@
       <find>&amp;</find>
     </findStrings>
   </component>
+  <component name="Git.Rebase.Settings">
+    <option name="ONTO" value="refs/heads/develop" />
+  </component>
   <component name="Git.Settings">
     <option name="PREVIOUS_COMMIT_AUTHORS">
       <list>
@@ -66,13 +75,13 @@
         <option value="LanHao" />
       </list>
     </option>
-    <option name="ROOT_SYNC" value="DONT_SYNC" />
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="develop" />
+        <entry key="$PROJECT_DIR$" value="landevelop" />
       </map>
     </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
   <component name="ProjectId" id="1SseWbYeXefjmjB3gR1UPNlnEY9" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
@@ -124,7 +133,14 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="ClientChat (1)" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+    <configuration name="ClientChat" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="ClientChat" />
+      <module name="udpchat" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ClientChat" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="club.lanhaoo.chat.ClientChat" />
       <module name="udpchat" />
       <extension name="coverage">
@@ -133,13 +149,6 @@
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="ClientChat" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="ClientChat" />
-      <module name="udpchat" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -157,15 +166,15 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="server" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="club.lanhaoo.chat.server" />
+    <configuration name="Server" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="club.lanhaoo.chat.Server" />
       <module name="udpchat" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
     <list>
-      <item itemvalue="Application.server" />
+      <item itemvalue="Application.Server" />
       <item itemvalue="Application.ClientChat" />
       <item itemvalue="Application.ClientChat (1)" />
       <item itemvalue="Application.MainWindow" />
@@ -174,10 +183,10 @@
     <recent_temporary>
       <list>
         <item itemvalue="Application.ClientChat (1)" />
+        <item itemvalue="Application.Server" />
         <item itemvalue="Application.App" />
         <item itemvalue="Application.MainWindow" />
         <item itemvalue="Application.ClientChat" />
-        <item itemvalue="Application.server" />
       </list>
     </recent_temporary>
   </component>
@@ -216,6 +225,8 @@
       <workItem from="1572356801905" duration="253000" />
       <workItem from="1572357114568" duration="21805000" />
       <workItem from="1572436025099" duration="7917000" />
+      <workItem from="1572622364157" duration="203000" />
+      <workItem from="1572623047481" duration="1424000" />
     </task>
     <task id="LOCAL-00001" summary="第一版聊天室&#10;实现一人聊天，全服务器广播&#10;有超级命令和一般用户命令">
       <created>1560788572489</created>

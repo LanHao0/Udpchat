@@ -7,6 +7,8 @@
 
 package club.lanhaoo.chat;
 
+import com.google.gson.Gson;
+
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -17,6 +19,7 @@ public class Message {
     private String command;
     private String content;
     private String timestamp;
+    private String fromIp;
 
     public Message(String mtype,String mcommand, String mcontent, String mtimestamp){
         type=mtype;
@@ -29,6 +32,13 @@ public class Message {
         return type;
     }
 
+    public String getFromIp() {
+        return fromIp;
+    }
+
+    public void setFromIp(String fromIp) {
+        this.fromIp = fromIp;
+    }
 
     public String getCommand() {
         return command;
@@ -63,16 +73,17 @@ public class Message {
     public boolean send(UserSettings userSettings){
         try {
             DatagramSocket datagramSocket2=new DatagramSocket(2113);
-            String pure_message=content;
 
             if (userSettings.getUserName()!=null){
-                pure_message="[with_name]"+userSettings.getUserName()+"@"+content;
+                this.sender=userSettings.getUserName();
             }
             if (userSettings.getHidemyIp()){
-                pure_message="UserCommand.NoNameSend#"+content;
+//                pure_message="UserCommand.NoNameSend#"+content;
+                this.command="UserCommand.NoNameSend";
             }
-
-            byte[] bytes=pure_message.getBytes();
+            Gson gson=new Gson();
+            String raw_Data = gson.toJson(this);
+            byte[] bytes=raw_Data.getBytes();
 
             DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length, InetAddress.getByName(userSettings.getServerIp()),2112);
 

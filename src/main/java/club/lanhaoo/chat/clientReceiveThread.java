@@ -1,5 +1,7 @@
 package club.lanhaoo.chat;
 
+import com.google.gson.Gson;
+
 import javax.swing.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -28,9 +30,8 @@ public class clientReceiveThread implements Runnable {
                 //todo 接受到的消息都是来自服务端的。。。。
 
                 String message_pure=new String(datagramPacket.getData(),0,datagramPacket.getLength(),"UTF-8");
-
-                String fromip=message_pure.split("&")[1];
-                message_pure=message_pure.split("&")[0];
+                Gson gson=new Gson();
+                Message message=gson.fromJson(message_pure,Message.class);
 
                 if(message_pure.startsWith("[with_name]")){
                     if(message_pure.contains("@")){
@@ -42,8 +43,8 @@ public class clientReceiveThread implements Runnable {
                     }
                 }
 
-                System.out.println("来自 "+fromip);
-                System.out.println(message_pure);
+                System.out.println("来自 "+message.getFromIp());
+                System.out.println(message.getContent());
             }
 
         }catch (Exception e){

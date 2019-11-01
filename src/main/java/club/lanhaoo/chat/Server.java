@@ -1,11 +1,12 @@
 package club.lanhaoo.chat;
 
+import com.google.gson.Gson;
 import org.omg.PortableInterceptor.INACTIVE;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.Scanner;
 
 /**
@@ -15,7 +16,7 @@ import java.util.Scanner;
  * @Magic_Power_Of_Code!
  */
 
-public class server {
+public class Server {
     public static void main(String[] args) throws Exception{
         //可能抛出异常 加上抛出异常
 
@@ -51,7 +52,10 @@ public class server {
             String pure_message=new String(datagramPacket.getData(),0,datagramPacket.getLength(),"UTF-8");
             String fromIP=datagramPacket.getAddress().getHostAddress();
 
+            Gson gson=new Gson();
+            Message message=gson.fromJson(pure_message,Message.class);
 
+            String command=message.getCommand();
 
             Iplist.add(fromIP);
             //todo 超级命令登陆ip
@@ -80,8 +84,8 @@ public class server {
 
 
                     // 广播前检测
-                    if (pure_message.contains("UserCommand")){
-                        if (pure_message.contains(UserCommand_Nonamesend)){
+                    if (command.contains("UserCommand")){
+                        if (command.contains(UserCommand_Nonamesend)){
                             String string="[匿名消息]"+pure_message.split("#")[1]+"&匿名用户";
                             datagramSocket.send(new DatagramPacket(string.getBytes("UTF-8"),string.getBytes("UTF-8").length,InetAddress.getByName(broadcast_ip),12251));
                         }
@@ -89,14 +93,14 @@ public class server {
                     }
 
 
-                    if(pure_message.contains("SYSTEM_COMMAND")){
+                    if(command.contains("SYSTEM_COMMAND")){
                         try{
-                            if(pure_message.split("#")[1].equals("mima111")){
+                            if(command.split("#")[1].equals("mima111")){
 
-                                if (pure_message.contains(SuperbanipCommand)){
+                                if (command.contains(SuperbanipCommand)){
                                     //SYSTEM_COMMAND.BANIP#mima111#127.0.0.1
 
-                                    BanIp.add(pure_message.split("#")[2]);
+                                    BanIp.add(command.split("#")[2]);
                                     System.out.println("Banned ip:"+pure_message.split("#")[2]);
 
                                     String temp="["+fromIP+"已被管理员封禁]&[系统消息]";
@@ -104,10 +108,10 @@ public class server {
                                     continue;
 
                                 }
-                                if (pure_message.contains(SuperunbanipCommand)){
+                                if (command.contains(SuperunbanipCommand)){
                                     //SYSTEM_COMMAND.BANIP#mima111#127.0.0.1
 
-                                    BanIp.remove(pure_message.split("#")[2]);
+                                    BanIp.remove(command.split("#")[2]);
                                     System.out.println("unban ip:"+pure_message.split("#")[2]);
 
                                     String temp="["+fromIP+"解除封禁]&[系统消息]";
@@ -115,7 +119,7 @@ public class server {
                                     continue;
 
                                 }
-                                if(pure_message.contains(SuperendendCommand)){
+                                if(command.contains(SuperendendCommand)){
                                     //todo pure_message 判断来源用户
 
                                         System.out.println(ServerOfftips);
@@ -133,11 +137,10 @@ public class server {
                         }
                     }
                 //广播消息
-                System.out.println("广播来自 "+datagramPacket.getAddress().getHostAddress()+" 的消息 "+ pure_message);
-                byte[] bytes1=new byte[1024];
-                pure_message=pure_message+"&"+fromIP;
-                bytes1=pure_message.getBytes("UTF-8");
-                datagramSocket.send(new DatagramPacket(bytes1,bytes1.length,InetAddress.getByName(broadcast_ip),12251));
+                System.out.println("广播来自 " + message.getFromIp() + " 的消息 " + message.getContent());
+                byte[] bytes1;
+                bytes1 = pure_message.getBytes(StandardCharsets.UTF_8);
+                datagramSocket.send(new DatagramPacket(bytes1, bytes1.length, InetAddress.getByName(broadcast_ip), 12251));
 
 
             }
@@ -146,5 +149,23 @@ public class server {
             datagramSocket.close();
 
 
+    }
+    //这段代码来自https://stackoverflow.com/questions/17252018/getting-my-lan-ip-address-192-168-xxxx-ipv4，强转了两句的变量类型，适用于这里
+    public static String getIpAddress() {
+        try {
+            for (Enumeration en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+                NetworkInterface intf = (NetworkInterface) en.nextElement();
+                for (Enumeration enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                    InetAddress inetAddress = (InetAddress) enumIpAddr.nextElement();
+                    if (!inetAddress.isLoopbackAddress()&&inetAddress instanceof Inet4Address) {
+                        String ipAddress=inetAddress.getHostAddress().toString();
+                        return ipAddress;
+                    }
+                }
+            }
+        } catch (SocketException ex) {
+            System.out.print("get wrong LAN ip");
+        }
+        return null;
     }
 }
