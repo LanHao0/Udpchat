@@ -23,7 +23,6 @@ public class clientReceiveThread implements Runnable {
             byte[] bytes_from_server=new byte[1024];
             DatagramPacket datagramPacket=new DatagramPacket(bytes_from_server,bytes_from_server.length);
 
-            String username;
 
             while (true){
                 datagramSocket.receive(datagramPacket);
@@ -32,15 +31,11 @@ public class clientReceiveThread implements Runnable {
                 String message_pure=new String(datagramPacket.getData(),0,datagramPacket.getLength(),"UTF-8");
                 Gson gson=new Gson();
                 Message message=gson.fromJson(message_pure,Message.class);
+                String command=message.getCommand();
 
-                if(message_pure.startsWith("[with_name]")){
-                    if(message_pure.contains("@")){
-                        message_pure=message_pure.replace("[with_name]","");
-                        username=message_pure.split("@")[0];
-                        System.out.println("来自 "+username);
-                        System.out.println(message_pure.split("@")[1]);
-                        continue;
-                    }
+                if(command.contains("UserCommands.NoNameSend")){
+                    System.out.println("来自 "+message.getSender());
+                    System.out.println(message.getContent());
                 }
 
                 System.out.println("来自 "+message.getFromIp());

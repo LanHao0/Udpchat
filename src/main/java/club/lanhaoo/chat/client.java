@@ -91,6 +91,8 @@ public class client {
 
 
             byte[] bytes=raw_Data.getBytes("UTF-8");
+
+
             DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length,InetAddress.getByName(server_ip),2112);
 
             datagramSocket.send(datagramPacket);

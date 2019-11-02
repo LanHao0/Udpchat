@@ -309,21 +309,19 @@ public class ClientChat {
                 Gson gson=new Gson();
                 Message message=gson.fromJson(message_pure,Message.class);
 
+                String command=message.getCommand();
                 if (!arr_ip.contains(message.getFromIp())) {
                     arr_ip.add(message.getFromIp());
                     ((DefaultListModel) listModel_ip).addElement(message.getFromIp());
                 }
 
 
-                if(message_pure.startsWith("[with_name]")){
-                    if(message_pure.contains("@")){
-                        message_pure=message_pure.replace("[with_name]","");
-                        userSettings.setUserName(message_pure.split("@")[0]);
+                if(command.contains("UserCommand")){
 
-                        jTextArea_chat.append("来自 "+userSettings.getUserName()+"\n");
-                        jTextArea_chat.append(message_pure.split("@")[1]+"\n");
+                        jTextArea_chat.append("来自 "+message.getSender()+"\n");
+                        jTextArea_chat.append(message.getContent()+"\n");
                         continue;
-                    }
+
                 }
 
 

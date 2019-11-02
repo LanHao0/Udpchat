@@ -52,6 +52,14 @@ public class Message {
         return timestamp;
     }
 
+    public void setSender(String sender) {
+        this.sender = sender;
+    }
+
+    public String getSender() {
+        return sender;
+    }
+
     public boolean send(String toIp){
         try {
             DatagramSocket datagramSocket2=new DatagramSocket(2113);

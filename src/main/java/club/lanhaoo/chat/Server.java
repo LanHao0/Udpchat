@@ -86,8 +86,10 @@ public class Server {
                     // 广播前检测
                     if (command.contains("UserCommand")){
                         if (command.contains(UserCommand_Nonamesend)){
-                            String string="[匿名消息]"+pure_message.split("#")[1]+"&匿名用户";
-                            datagramSocket.send(new DatagramPacket(string.getBytes("UTF-8"),string.getBytes("UTF-8").length,InetAddress.getByName(broadcast_ip),12251));
+
+                            message.setSender("[匿名消息]");
+                            pure_message=gson.toJson(message);
+                            datagramSocket.send(new DatagramPacket(pure_message.getBytes("UTF-8"),pure_message.getBytes("UTF-8").length,InetAddress.getByName(broadcast_ip),12251));
                         }
                         continue;
                     }
