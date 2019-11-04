@@ -15,6 +15,9 @@
             return xmlhttprequest.responseText;
         }
 
+        function getfile(filepath) {
+            window.open("?getjson=1&checkpass=replace_pass&filepath="+filepath);
+        }
         function enter(filepath,filename) {
             // https://stackoverflow.com/questions/2385113/howto-div-with-onclick-inside-another-div-with-onclick-javascript
             if (!e) var e = window.event;
@@ -50,11 +53,21 @@
             for(let i=0;i<json_data_folder.length;i++){
                 // replace_string_folder+="<a href='./?filepath="+json_raw_data[i].filepath+"'>"+json_raw_data[i].filename+"</a><br>";
                 // console.log(json_raw_data[i].filepath);
-                let filename=encodeURI(json_data_folder[i].filename);
-                let filepath=encodeURI(json_data_folder[i].filepath);
-                fill_string_folder+="<div class='col-3 card overflow-hidden m-1' onclick='enter(\""+filepath+"\",\""+filename+"\");' id='"+filepath+"'>" +
-                    "             "+json_data_folder[i].filename+
-                    "              </div>"
+                if (json_data_folder[i].isFile){
+                    console.log(json_data_folder[i].filename);
+                    let filename=encodeURI(json_data_folder[i].filename);
+                    let filepath=encodeURI(json_data_folder[i].filepath);
+                    fill_string_folder+="<div class='col-3 card overflow-hidden m-1' onclick='getfile(\""+filepath+"\");'>" +
+                        "             "+json_data_folder[i].filename+
+                        "              </div>";
+                }else {
+                    let filename=encodeURI(json_data_folder[i].filename);
+                    let filepath=encodeURI(json_data_folder[i].filepath);
+                    fill_string_folder+="<div class='col-3 card overflow-hidden m-1' onclick='enter(\""+filepath+"\",\""+filename+"\");' id='"+filepath+"'>" +
+                        "             "+json_data_folder[i].filename+
+                        "              </div>";
+                }
+
             }
             for(let i=0;i<json_data_file.length;i++){
 

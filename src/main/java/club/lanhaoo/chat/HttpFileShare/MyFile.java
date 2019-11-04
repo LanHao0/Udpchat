@@ -16,7 +16,7 @@ public class MyFile {
         ArrayList<MyEveryFileProperties> arrayList=new ArrayList<MyEveryFileProperties>();
 
         for (File file : roots) {
-            arrayList.add(new MyEveryFileProperties(file.getPath(),file.getPath()));
+            arrayList.add(new MyEveryFileProperties(file.getPath(),file.getPath(),false));
         }
         Gson gson=new Gson();
 
@@ -32,10 +32,10 @@ public class MyFile {
         for (final File fileEntry : folder.listFiles()) {
             if (onlyFolder){
                 if (!fileEntry.isFile()){
-                    arrayList.add(new MyEveryFileProperties(fileEntry.getAbsolutePath(), fileEntry.getName()));
+                    arrayList.add(new MyEveryFileProperties(fileEntry.getAbsolutePath(), fileEntry.getName(),fileEntry.isFile()));
                 }
             }else{
-                arrayList.add(new MyEveryFileProperties(fileEntry.getAbsolutePath(), fileEntry.getName()));
+                arrayList.add(new MyEveryFileProperties(fileEntry.getAbsolutePath(), fileEntry.getName(),fileEntry.isFile()));
             }
 
         }

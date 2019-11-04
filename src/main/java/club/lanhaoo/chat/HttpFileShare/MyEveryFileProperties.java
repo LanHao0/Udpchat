@@ -10,10 +10,12 @@ package club.lanhaoo.chat.HttpFileShare;
 public class MyEveryFileProperties {
     private String filepath;
     private String filename;
+    private Boolean isFile;
 
-    public MyEveryFileProperties(String filepath, String filename) {
+    public MyEveryFileProperties(String filepath, String filename,Boolean isFile) {
         this.filepath = filepath;
         this.filename = filename;
+        this.isFile = isFile;
     }
 
 }

@@ -7,9 +7,31 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2e0821c8-3540-4899-9e60-532eb45e36b8" name="Default Changelist" comment="基于现在的消息重新实现匿名功能&#10;服务器接收到匿名消息">
+      <change afterPath="$PROJECT_DIR$/.idea/artifacts/udpchat_jar.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__asm_asm_3_0.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__asm_asm_commons_3_0.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__asm_asm_tree_3_0.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__com_intellij_forms_rt_7_0_3.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__com_jgoodies_forms_1_1_preview.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__jdom_jdom_1_0.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/META-INF/MANIFEST.MF" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/client.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/clientReceiveThread.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/clientReceiveThread.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/artifacts/server/udpchat.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/artifacts/udpchat_jar/server.jar" beforeDir="false" afterPath="$PROJECT_DIR$/out/artifacts/udpchat_jar/server.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/out/artifacts/udpchat_jar/udpchat_jar.rar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/ClientChat.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/ClientChat.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/MyEveryFileProperties.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/MyEveryFileProperties.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/MyFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/club/lanhaoo/chat/HttpFileShare/MyFile.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/META-INF/udpchat.kotlin_module" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/club/lanhaoo/chat/ClientChat.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/club/lanhaoo/chat/ClientChat.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/club/lanhaoo/chat/HttpFileShare/MyEveryFileProperties.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/club/lanhaoo/chat/HttpFileShare/MyEveryFileProperties.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/club/lanhaoo/chat/HttpFileShare/MyFile.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/club/lanhaoo/chat/HttpFileShare/MyFile.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/club/lanhaoo/chat/client.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/club/lanhaoo/chat/client.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/club/lanhaoo/chat/clientReceiveThread.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/club/lanhaoo/chat/clientReceiveThread.class" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/target/classes/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/udpchat.iml" beforeDir="false" afterPath="$PROJECT_DIR$/udpchat.iml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -81,6 +103,13 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="usePluginRegistry" value="true" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
   <component name="ProjectId" id="1SseWbYeXefjmjB3gR1UPNlnEY9" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -99,11 +128,18 @@
     <property name="last_opened_file_path" value="$PROJECT_DIR$/gson-2.8.5.jar!/" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="project.structure.last.edited" value="Modules" />
+    <property name="nodejs_package_manager_path" value="npm" />
+    <property name="project.structure.last.edited" value="Artifacts" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
+    <property name="settings.editor.selected.configurable" value="project.propGUI" />
+  </component>
+  <component name="RunAnythingCache">
+    <option name="myCommands">
+      <command value="mvn package" />
+      <command value="mvn clean" />
+    </option>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -247,7 +283,10 @@
       <workItem from="1572661654266" duration="1061000" />
       <workItem from="1572672582473" duration="340000" />
       <workItem from="1572673099967" duration="446000" />
-      <workItem from="1572791030864" duration="146000" />
+      <workItem from="1572791030864" duration="486000" />
+      <workItem from="1572846534532" duration="110000" />
+      <workItem from="1572846828385" duration="4418000" />
+      <workItem from="1572870099074" duration="1617000" />
     </task>
     <task id="LOCAL-00001" summary="第一版聊天室&#10;实现一人聊天，全服务器广播&#10;有超级命令和一般用户命令">
       <created>1560788572489</created>
@@ -333,7 +372,14 @@
       <option name="project" value="LOCAL" />
       <updated>1572662740316</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="基于现在的消息重新实现匿名功能&#10;服务器接收到匿名消息">
+      <created>1572791288837</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1572791288838</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TodoView">
