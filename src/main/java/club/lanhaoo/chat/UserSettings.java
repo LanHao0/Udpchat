@@ -9,7 +9,8 @@ package club.lanhaoo.chat;
 
 public class UserSettings {
     private String UserName;
-    private boolean HidemyIp;
+    private boolean HidemyIp=false;
+    private boolean onFileSharing=false;
 
     public void setServerIp(String serverIp) {
         ServerIp = serverIp;
@@ -37,4 +38,11 @@ public class UserSettings {
         HidemyIp = hidemyIp;
     }
 
+    public boolean isOnFileSharing() {
+        return onFileSharing;
+    }
+
+    public void setOnFileSharing(boolean onFileSharing) {
+        this.onFileSharing = onFileSharing;
+    }
 }

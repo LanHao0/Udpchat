@@ -6,6 +6,7 @@ import org.omg.PortableInterceptor.INACTIVE;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.Scanner;
 
@@ -17,150 +18,146 @@ import java.util.Scanner;
  */
 
 public class Server {
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
         //可能抛出异常 加上抛出异常
 
         //服务端其实就是所有消息的接收端！接收到消息打印到聊天室房间
-        //todo 服务器发送消息到房间
+
         System.out.println("开始服务端");
-        InetAddress localHost=InetAddress.getLocalHost();
+        InetAddress localHost = InetAddress.getLocalHost();
 
         //自动生成广播地址
         String[] temp_arr;
 
-        temp_arr=localHost.getHostAddress().split("\\.");
-        temp_arr[3]="255";
-        String broadcast_ip=temp_arr[0]+"."+temp_arr[1]+"."+temp_arr[2]+"."+temp_arr[3];
+        temp_arr = localHost.getHostAddress().split("\\.");
+        temp_arr[3] = "255";
+        String broadcast_ip = temp_arr[0] + "." + temp_arr[1] + "." + temp_arr[2] + "." + temp_arr[3];
 
-        System.out.println("广播地址: "+ broadcast_ip);
+        System.out.println("广播地址: " + broadcast_ip);
 
-        byte[] bytes=new byte[1024];
-        DatagramSocket datagramSocket=new DatagramSocket(2112);
-        DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length);
-        System.out.println("在 "+localHost+ " : 2112"+"上运行服务端 ");
-        boolean ServerOn=true;
-        String username;
-        ArrayList Iplist=new ArrayList();
-        ArrayList BanIp=new ArrayList();
+        byte[] bytes = new byte[1024];
+        DatagramSocket datagramSocket = new DatagramSocket(2112);
+        DatagramPacket datagramPacket = new DatagramPacket(bytes, bytes.length);
+        System.out.println("在 " + localHost + " : 2112" + "上运行服务端 ");
+        boolean ServerOn = true;
 
-        while (ServerOn){
+        ArrayList Iplist = new ArrayList();
+        ArrayList BanIp = new ArrayList();
+
+        String serverPassword="mima111";
+
+        while (ServerOn) {
 
             datagramSocket.receive(datagramPacket);
             //收到消息
 
-            String received_message_merge=new String(datagramPacket.getData(),0,datagramPacket.getLength(),"UTF-8")+" 来自 "+datagramPacket.getAddress().getHostAddress();
-            String pure_message=new String(datagramPacket.getData(),0,datagramPacket.getLength(),"UTF-8");
-            String fromIP=datagramPacket.getAddress().getHostAddress();
+            String pure_message = new String(datagramPacket.getData(), 0, datagramPacket.getLength(), StandardCharsets.UTF_8);
+            System.out.println(pure_message);
+            String fromIP = datagramPacket.getAddress().getHostAddress();
 
-            Gson gson=new Gson();
-            Message message=gson.fromJson(pure_message,Message.class);
+            Gson gson = new Gson();
+            Message message = gson.fromJson(pure_message, Message.class);
 
-            String command=message.getCommand();
+            String message_content=message.getContent();
+            String command = message.getCommand();
 
             Iplist.add(fromIP);
             //todo 超级命令登陆ip
 
-            if(BanIp.contains(fromIP)){
+            if (BanIp.contains(fromIP)) {
                 //如果来自被封禁IP，则不进行操作
-                String bannedtips="你已被管理员封禁，无法发送群消息&[系统消息]";
-                byte[] bytes1=new byte[1024];
-                bytes1=bannedtips.getBytes("UTF-8");
-                datagramSocket.send(new DatagramPacket(bytes1,bytes1.length,InetAddress.getByName(fromIP),12251));
-                System.out.println("来自封禁Ip:"+fromIP+"内容:"+pure_message);
+                String bannedtips = "你已被管理员封禁，无法发送群消息&[系统消息]";
+                long mtime = new Date().getTime();
+                Message message_back = new Message("text", "", bannedtips, String.valueOf(mtime));
+                if (!message_back.send(fromIP)) {
+                    System.out.println("发送失败\n");
+                }
+                System.out.println("来自封禁Ip:" + fromIP + "内容:" + pure_message);
                 continue;
-            }else {
 
-                    //config
-                    String SuperendendCommand="SYSTEM_COMMAND.ENDSERVER";
-                    String SuperbanipCommand="BANIP";
-                    String SuperunbanipCommand="UNBAN";
-                    String ServerOfftips=localHost+"服务器下线&[系统消息]";
+            } else {
 
-                    System.out.println(received_message_merge);
-                    //System.out.println(pure_message);
+                //config
+                String endCommand = "ENDSERVER";
+                String banipCommand = "BANIP";
+                String unbanipCommand = "UNBAN";
+                String ServerOfftips = localHost + "服务器下线&[系统消息]";
 
-                    String UserCommand_Nonamesend="NoNameSend";
-                    //config
+                String UserCommand_Nonamesend = "NoNameSend";
+                //config
 
 
-                    // 广播前检测
-                    if (command.contains("UserCommand")){
-                        if (command.contains(UserCommand_Nonamesend)){
+                // 广播前检测
+                if (command.contains("SYSTEM_COMMAND")) {
+                    if (message_content.contains(serverPassword)){
+                        String mcontent=null;
 
-                            message.setSender("[匿名消息]");
-                            pure_message=gson.toJson(message);
-                            datagramSocket.send(new DatagramPacket(pure_message.getBytes("UTF-8"),pure_message.getBytes("UTF-8").length,InetAddress.getByName(broadcast_ip),12251));
+                        if (command.contains(banipCommand)){
+                            BanIp.add(message_content.split("#")[2]);
+                            System.out.println("Banned ip:" + message_content.split("#")[2]);
+                            mcontent="已封禁IP: "+fromIP;
+
                         }
+
+                        if (command.contains(unbanipCommand)){
+                            BanIp.remove(message_content.split("#")[2]);
+                            System.out.println("Unbanned ip:" + message_content.split("#")[2]);
+                            mcontent="解封IP: "+fromIP;
+
+                        }
+
+                        if (command.contains(endCommand)){
+                            System.out.println(ServerOfftips);
+
+                            mcontent=ServerOfftips;
+
+                            // todo stop Broadcasting message instead of break the loop
+                            break;
+                        }
+
+                        long mtime = new Date().getTime();
+                        Message message_go=new Message(
+                                "system",
+                                "",
+                                mcontent,
+                                String.valueOf(mtime));
+                        message_go.serverSend(broadcast_ip);
                         continue;
                     }
 
+                }
 
-                    if(command.contains("SYSTEM_COMMAND")){
-                        try{
-                            if(command.split("#")[1].equals("mima111")){
-
-                                if (command.contains(SuperbanipCommand)){
-                                    //SYSTEM_COMMAND.BANIP#mima111#127.0.0.1
-
-                                    BanIp.add(command.split("#")[2]);
-                                    System.out.println("Banned ip:"+pure_message.split("#")[2]);
-
-                                    String temp="["+fromIP+"已被管理员封禁]&[系统消息]";
-                                    datagramSocket.send(new DatagramPacket(temp.getBytes("UTF-8"),temp.getBytes("UTF-8").length,InetAddress.getByName(broadcast_ip),12251));
-                                    continue;
-
-                                }
-                                if (command.contains(SuperunbanipCommand)){
-                                    //SYSTEM_COMMAND.BANIP#mima111#127.0.0.1
-
-                                    BanIp.remove(command.split("#")[2]);
-                                    System.out.println("unban ip:"+pure_message.split("#")[2]);
-
-                                    String temp="["+fromIP+"解除封禁]&[系统消息]";
-                                    datagramSocket.send(new DatagramPacket(temp.getBytes("UTF-8"),temp.getBytes("UTF-8").length,InetAddress.getByName(broadcast_ip),12251));
-                                    continue;
-
-                                }
-                                if(command.contains(SuperendendCommand)){
-                                    //todo pure_message 判断来源用户
-
-                                        System.out.println(ServerOfftips);
-
-                                        byte[] temp_byte=ServerOfftips.getBytes("UTF-8");
-
-                                        datagramSocket.send(new DatagramPacket(temp_byte,temp_byte.length,InetAddress.getByName(broadcast_ip),12251));
-                                        break;
-                                    }
-
-                            }
-
-                        }catch (Exception e){
-                            continue;
-                        }
+                if (command.contains("UserCommand")) {
+                    if (command.contains(UserCommand_Nonamesend)) {
+                        message.setSender("[匿名消息]");
+                        message.serverSend(broadcast_ip);
                     }
+
+                    continue;
+                }
+
+
                 //广播消息
                 System.out.println("广播来自 " + message.getFromIp() + " 的消息 " + message.getContent());
-                byte[] bytes1;
-                bytes1 = pure_message.getBytes(StandardCharsets.UTF_8);
-                datagramSocket.send(new DatagramPacket(bytes1, bytes1.length, InetAddress.getByName(broadcast_ip), 12251));
-
-
+                message.serverSend(broadcast_ip);
             }
 
-        }
-            datagramSocket.close();
 
+        }
+
+        datagramSocket.close();
 
     }
+
     //这段代码来自https://stackoverflow.com/questions/17252018/getting-my-lan-ip-address-192-168-xxxx-ipv4，强转了两句的变量类型，适用于这里
     public static String getIpAddress() {
         try {
-            for (Enumeration en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
+            for (Enumeration en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
                 NetworkInterface intf = (NetworkInterface) en.nextElement();
-                for (Enumeration enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
+                for (Enumeration enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements(); ) {
                     InetAddress inetAddress = (InetAddress) enumIpAddr.nextElement();
-                    if (!inetAddress.isLoopbackAddress()&&inetAddress instanceof Inet4Address) {
-                        String ipAddress=inetAddress.getHostAddress().toString();
+                    if (!inetAddress.isLoopbackAddress() && inetAddress instanceof Inet4Address) {
+                        String ipAddress = inetAddress.getHostAddress().toString();
                         return ipAddress;
                     }
                 }

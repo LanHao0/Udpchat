@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import javax.swing.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 /**
@@ -28,18 +29,18 @@ public class clientReceiveThread implements Runnable {
                 datagramSocket.receive(datagramPacket);
                 //todo 接受到的消息都是来自服务端的。。。。
 
-                String message_pure=new String(datagramPacket.getData(),0,datagramPacket.getLength(),"UTF-8");
+                String message_pure=new String(datagramPacket.getData(),0,datagramPacket.getLength(), StandardCharsets.UTF_8);
                 Gson gson=new Gson();
                 Message message=gson.fromJson(message_pure,Message.class);
-                String command=message.getCommand();
 
-                if(command.contains("UserCommands.NoNameSend")){
+                if(message.getSender()!=null){
                     System.out.println("来自 "+message.getSender());
-                    System.out.println(message.getContent());
+                    System.out.println(message.getContent()+'\n');
+                    continue;
                 }
 
                 System.out.println("来自 "+message.getFromIp());
-                System.out.println(message.getContent());
+                System.out.println(message.getContent()+'\n');
             }
 
         }catch (Exception e){

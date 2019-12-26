@@ -115,5 +115,4 @@ public class App extends NanoHTTPD {
         msg=msg.replace("replace_pass",webpassword);
         return newFixedLengthResponse(msg);
     }
-
 }

@@ -39,7 +39,7 @@ public class ClientChat {
     private JButton serverIPButton;
     private JButton fileShareButton;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
 
         final UserSettings userSettings = new UserSettings();
@@ -151,6 +151,7 @@ public class ClientChat {
             }
         });
         final JButton jButton_fileShare = clientChat.fileShareButton;
+        final App app = new App();
 
         jButton_fileShare.addMouseListener(new MouseListener() {
             @Override
@@ -160,21 +161,26 @@ public class ClientChat {
 
             @Override
             public void mousePressed(MouseEvent e) {
-                try {
 
-                    App app = new App();
-
+                if (userSettings.isOnFileSharing()) {
+                    app.stop();
+                    userSettings.setOnFileSharing(false);
+                    jButton_fileShare.setText("FileShare");
+                    jTextArea_chat.append("已停止分享文件\n");
+                } else {
                     app.setWebpassword(JOptionPane.showInputDialog("设置密码?"));
+                    try {
+                        app.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
 
-                    app.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
+                        jTextArea_chat.append("开始分享文件,ip地址: " + InetAddress.getLocalHost().getHostAddress() + ":8089 \n");
+                        jButton_fileShare.setText("停止分享文件");
 
-                    jTextArea_chat.append("开始分享文件,ip地址: " + InetAddress.getLocalHost().getHostAddress() + ":8089");
-                    jButton_fileShare.setText("停止分享文件");
-
-
-                } catch (IOException ex) {
-                    ex.printStackTrace();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
+                    userSettings.setOnFileSharing(true);
                 }
+
 
             }
 
@@ -309,21 +315,16 @@ public class ClientChat {
                 Gson gson = new Gson();
                 Message message = gson.fromJson(message_pure, Message.class);
 
-                String command = message.getCommand();
                 if (!arr_ip.contains(message.getFromIp())) {
                     arr_ip.add(message.getFromIp());
                     ((DefaultListModel) listModel_ip).addElement(message.getFromIp());
                 }
 
-
-                if (command.contains("UserCommand")) {
-
+                if (message.getSender() != null) {
                     jTextArea_chat.append("来自 " + message.getSender() + "\n");
-                    jTextArea_chat.append(message.getContent() + "\n");
+                    jTextArea_chat.append(message.getContent() + "\n\n");
                     continue;
-
                 }
-
 
                 jTextArea_chat.append("来自 " + message.getFromIp() + "\n");
                 jTextArea_chat.append(message.getContent() + "\n\n");
@@ -421,5 +422,6 @@ public class ClientChat {
     public JComponent $$$getRootComponent$$$() {
         return panel1;
     }
+
 }
 

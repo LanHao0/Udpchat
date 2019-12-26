@@ -50,7 +50,7 @@
             let fill_div_file=document.getElementById("div_replace_all");
             let fill_string_folder="";
             let fill_string_file="";
-            for(let i=0;i<json_data_folder.length;i++){
+            for(let i in json_data_folder){
                 // replace_string_folder+="<a href='./?filepath="+json_raw_data[i].filepath+"'>"+json_raw_data[i].filename+"</a><br>";
                 // console.log(json_raw_data[i].filepath);
                 if (json_data_folder[i].isFile){
@@ -63,13 +63,13 @@
                 }else {
                     let filename=encodeURI(json_data_folder[i].filename);
                     let filepath=encodeURI(json_data_folder[i].filepath);
-                    fill_string_folder+="<div class='col-3 card overflow-hidden m-1' onclick='enter(\""+filepath+"\",\""+filename+"\");' id='"+filepath+"'>" +
+                    fill_string_folder+="<div class='col-3 card overflow-hidden m-1' onclick='enter(\""+filepath+"\",\""+filename+"\");' id='"+filepath+"' >" +
                         "             "+json_data_folder[i].filename+
                         "              </div>";
                 }
 
             }
-            for(let i=0;i<json_data_file.length;i++){
+            for(let i in json_data_file){
 
                 let filename=encodeURI(json_data_file[i].filename);
                 let filepath=encodeURI(json_data_file[i].filepath);
@@ -77,7 +77,10 @@
                 fill_string_file+="<div class='col-12 card overflow-hidden text-success' onclick='enter(\""+filepath+"\",\""+filename+"\");' id='"+filepath+"'>" +
                     "             "+json_data_file[i].filename+
                     "              </div>"
+
+
             }
+            
 
             fill_div.innerHTML+=fill_string_file;
             fill_div_file.innerHTML=fill_string_folder;
@@ -99,7 +102,8 @@
                 let filepath=encodeURI(json_raw_data[i].filepath);
                 // replace_string_folder+="<a href='./?filepath="+json_raw_data[i].filepath+"'>"+json_raw_data[i].filename+"</a><br>";
                 // console.log(json_raw_data[i].filepath);
-                replace_string_folder+="<div class='col-12 card text-success' onclick='enter(\""+filepath+"\",\""+filename+"\");' id='"+filepath+"'>" +
+
+                replace_string_folder+="<div class='col-12 card text-success' onclick='enter(\""+filepath+"\",\""+filename+"\");' id='"+filepath+"' >" +
                         "             "+json_raw_data[i].filename+
                         "              </div>" 
 
@@ -109,6 +113,12 @@
             }
             div_replace_all.innerHTML=replace_string_file;
             div_replace_folder.innerHTML=replace_string_folder;
+        }
+
+        function uploadFile(upload_path) {
+            
+            document.getElementById(upload_path).setAttribute("class","dragUpload");
+            console.log(upload_path);
         }
 
         function f() {
@@ -126,6 +136,9 @@
         .card:hover{
             box-shadow: 0 0 8px #0c5460;
             transition: all .5s;
+        }
+        .dragUpload{
+            border: solid 2px #1c7430;
         }
     </style>
 </head>

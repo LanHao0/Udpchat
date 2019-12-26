@@ -25,6 +25,7 @@ Here're some commands you may need.
 |Set Nickname|UserCommand.setMyName#yourname  |
 |User Private Talk|UserCommand.secretTalk#other_user_ip#message |
 |Send anonymous group message|UserCommand.NoNameSend#message|
+|open/close local network file sharing |UserCommand.fileShare|
 |Exit from group|UserCommand.Droplink|
 |Admin ban&unban ip|SYSTEM_COMMAND.BANIP#mima111#user_ip<br>SYSTEM_COMMAND.UNBAN#mima111#user_ip|
 |Admin turn off server|SYSTEM_COMMAND.ENDSERVER#mima111|
@@ -51,11 +52,12 @@ Here're some commands you may need.
 下面是你可能需要的一些命令：
 
 
-|Description|Command  |
+| 描述 | 命令 |
 |--|--|
-|设置昵称|UserCommand.setMyName#yourname  |
+| 设置昵称 | UserCommand.setMyName#yourname  |
 |私聊|UserCommand.secretTalk#other_user_ip#message |
 |发送匿名群消息|UserCommand.NoNameSend#message|
 |退出群聊|UserCommand.Droplink|
+|开启/关闭局域网共享|UserCommand.fileShare|
 |管理封禁&解封IP|SYSTEM_COMMAND.BANIP#mima111#user_ip<br>SYSTEM_COMMAND.UNBAN#mima111#user_ip|
 |管理关闭服务器|SYSTEM_COMMAND.ENDSERVER#mima111|

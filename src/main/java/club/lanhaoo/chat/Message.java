@@ -9,9 +9,9 @@ package club.lanhaoo.chat;
 
 import com.google.gson.Gson;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
+import java.io.IOException;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
 
 public class Message {
     private String type;
@@ -26,6 +26,10 @@ public class Message {
         command=mcommand;
         content=mcontent;
         timestamp=mtimestamp;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getType(){
@@ -60,11 +64,18 @@ public class Message {
         return sender;
     }
 
+    public void setContent(String content) {
+        this.content = content;
+    }
+
     public boolean send(String toIp){
         try {
             DatagramSocket datagramSocket2=new DatagramSocket(2113);
-            String pure_message="[私聊消息]"+content+"&"+InetAddress.getLocalHost().getHostAddress();
-            byte[] bytes=pure_message.getBytes();
+            this.setContent("[私聊消息]"+content);
+            Gson gson=new Gson();
+            String raw_data=gson.toJson(this);
+
+            byte[] bytes=raw_data.getBytes(StandardCharsets.UTF_8);
 
             DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length, InetAddress.getByName(toIp),12251);
 
@@ -78,6 +89,21 @@ public class Message {
         }
     }
 
+    public boolean serverSend(String broadcast_ip){
+        try {
+            DatagramSocket datagramSocket2=new DatagramSocket(2113);
+            Gson gson=new Gson();
+            String raw_data=gson.toJson(this);
+            System.out.println(raw_data);
+
+            datagramSocket2.send(new DatagramPacket(raw_data.getBytes(StandardCharsets.UTF_8), raw_data.getBytes(StandardCharsets.UTF_8).length, InetAddress.getByName(broadcast_ip), 12251));
+            datagramSocket2.close();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
     public boolean send(UserSettings userSettings){
         try {
             DatagramSocket datagramSocket2=new DatagramSocket(2113);
@@ -86,12 +112,11 @@ public class Message {
                 this.sender=userSettings.getUserName();
             }
             if (userSettings.getHidemyIp()){
-//                pure_message="UserCommand.NoNameSend#"+content;
-                this.command="UserCommand.NoNameSend";
+                this.setSender("[匿名消息]");
             }
             Gson gson=new Gson();
             String raw_Data = gson.toJson(this);
-            byte[] bytes=raw_Data.getBytes();
+            byte[] bytes=raw_Data.getBytes(StandardCharsets.UTF_8);
 
             DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length, InetAddress.getByName(userSettings.getServerIp()),2112);
 

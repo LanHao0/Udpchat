@@ -1,9 +1,10 @@
 package club.lanhaoo.chat;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
+import club.lanhaoo.chat.HttpFileShare.App;
+
+import java.util.Date;
 import java.util.Scanner;
+
 
 /**
  * @Author: LanHao
@@ -15,90 +16,126 @@ import java.util.Scanner;
 public class client {
     public static void main(String[] args) throws Exception{
         System.out.println("开始客户端，将使用端口2113");
-        DatagramSocket datagramSocket=new DatagramSocket(2113);
 
+
+        UserSettings userSettings =new UserSettings();
         System.out.println("输入服务器地址");
         Scanner sc=new Scanner(System.in);
-        String server_ip=sc.nextLine();
 
-        String username="游客";
+        String server_ip=sc.nextLine();
+        userSettings.setServerIp(server_ip);
 
         String end_command="UserCommand.Droplink";//config 结束聊天指令及提示
-        String end_tips="下线";
-        String set_Username="UserCommand.setMyName";
-        //conig 用户设置自己的名字,setMyName#test
-        boolean setname=false;
-        String  secret_Talk="secretTalk";
-        //secretTalk format UserCommand.secretTalk#ip#chatContent;
 
-        DatagramSocket datagramSocketfromsever=new DatagramSocket(1111);
+        App app_fileShare=new App();
+        String set_Username="setMyName";
+        String secret_Talk="secretTalk";
+        String noNameSend="NoNameSend";
+
+        //secretTalk format UserCommand.secretTalk#ip#chatContent;
 
         new Thread(new clientReceiveThread(),"club.lanhaoo.chat.client Receive message from club.lanhaoo.chat.server").start();
 
         boolean inCommunication=true;
+
         while (inCommunication){
 
-
-            System.out.println("输入消息");
             Scanner scanner=new Scanner(System.in);
             String raw_Data=scanner.nextLine();
 
-            if (setname){
-                raw_Data="[with_name]"+username+"@"+raw_Data;
+//            含有系统命令
+            if (raw_Data.startsWith("SYSTEM_COMMAND.")){
+                String command_sys=null;
+                if (raw_Data.contains("ENDSERVER")){
+                    command_sys="ENDSERVER";
+                }
 
+                if (raw_Data.contains("BANIP")){
+                    command_sys="BANIP";
+                }
+                if (raw_Data.contains("UNBAN")){
+                    command_sys="UNBAN";
+                }
+                if (raw_Data.contains("WHOIS")){
+                    command_sys="WHOIS";
+                }
+
+                long mtime = new Date().getTime();
+
+                Message message = new Message("text", "SYSTEM_COMMAND."+command_sys, raw_Data, String.valueOf(mtime));
+                if (!message.send(userSettings)) {
+                    System.out.println("发送失败\n");
+                }
+
+                continue;
             }
 
-
-
-
-            if (raw_Data.contains("[with_name]"+username+"@")||raw_Data.startsWith("UserCommand.")){
+//            含有用户命令
+            if (raw_Data.startsWith("UserCommand.")){
 
                 if (raw_Data.contains(secret_Talk)){
                     String toip=raw_Data.split("#")[1];
-                    String string="[私聊消息]"+raw_Data.split("#")[2]+"&"+InetAddress.getLocalHost().getHostAddress();
-                    byte[] temp_bytes=string.getBytes("UTF-8");
-                    DatagramPacket temp_dataPacket=new DatagramPacket(temp_bytes,temp_bytes.length,InetAddress.getByName(toip),12251);
-                    datagramSocket.send(temp_dataPacket);
-                    continue;
+                    String string=raw_Data.split("#")[2];
+
+                    long mtime = new Date().getTime();
+                    Message message = new Message("text", "", string, String.valueOf(mtime));
+
+                    if (!message.send(toip)) {
+                        System.out.println("发送失败\n");
+                    }
                 }
 
                 if (raw_Data.contains(end_command)){
                     inCommunication=false;
-                    byte[] temp_bytes=end_tips.getBytes("UTF-8");
-                    DatagramPacket temp_dataPacket=new DatagramPacket(temp_bytes,temp_bytes.length,InetAddress.getByName(server_ip),2112);
                     System.out.println("您已下线");
-                    datagramSocket.send(temp_dataPacket);
-
                     break;
                 }
 
                 if (raw_Data.contains(set_Username)){
-
                     String[] strings=raw_Data.split("#");
-                    username=strings[1];
-                    String temp_merge_message="[with_name]"+username+"#"+raw_Data;
-                    byte[] temp_bytes=temp_merge_message.getBytes("UTF-8");
-                    DatagramPacket temp_dataPacket=new DatagramPacket(temp_bytes,temp_bytes.length,InetAddress.getByName(server_ip),2112);
-
-                    System.out.println("已设置姓名："+username);
-                    setname=true;
-
-                    datagramSocket.send(temp_dataPacket);
-                    continue;
+                    userSettings.setUserName(strings[1]);
+                    System.out.println("已设置姓名："+strings[1]);
                 }
 
+                if (raw_Data.contains(noNameSend)){
+
+                    userSettings.setHidemyIp(!userSettings.getHidemyIp());
+                    if(userSettings.getHidemyIp()){
+                        System.out.println("已设置隐藏IP");
+                    }else {
+                        System.out.println("已关闭隐藏IP");
+                    }
+                }
+
+                if (raw_Data.contains("fileShare")){
+                    if (!userSettings.isOnFileSharing()){
+                        System.out.println("请设置文件分享密码");
+                        app_fileShare.setWebpassword(scanner.nextLine());
+                        System.out.println("开始文件分享,端口8089,密码 "+app_fileShare.getWebpassword());
+                        app_fileShare.start();
+                        userSettings.setOnFileSharing(true);
+                    }else {
+                        app_fileShare.stop();
+                        userSettings.setOnFileSharing(false);
+                        System.out.println("已关闭文件共享");
+                    }
+                }
+
+                continue;
+            }
+
+            long mtime = new Date().getTime();
+            Message message = new Message("text", "", raw_Data, String.valueOf(mtime));
+            message.setFromIp(Server.getIpAddress());
+
+            if (!message.send(userSettings)) {
+                System.out.println("发送失败\n");
             }
 
 
-            byte[] bytes=raw_Data.getBytes("UTF-8");
-
-
-            DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length,InetAddress.getByName(server_ip),2112);
-
-            datagramSocket.send(datagramPacket);
 
         }
 
-        datagramSocket.close();
+        //结束
     }
 }

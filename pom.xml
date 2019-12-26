@@ -43,7 +43,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>club.lanhaoo.chat.ClientChat</mainClass>
+                            <mainClass>club.lanhaoo.chat.client</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -51,6 +51,8 @@
                     </descriptorRefs>
                 </configuration>
             </plugin>
+
+
         </plugins>
     </build>
     <dependencies>
