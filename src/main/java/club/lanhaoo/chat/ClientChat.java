@@ -224,6 +224,7 @@ public class ClientChat {
 
                 long mtime = new Date().getTime();
                 Message message = new Message("text", "", pure_message, String.valueOf(mtime));
+                message.setFromIp(Server.getIpAddress());
 
                 if (message.send(userSettings)) {
                     jTextArea_message.setText(null);
@@ -323,12 +324,15 @@ public class ClientChat {
                 if (message.getSender() != null) {
                     jTextArea_chat.append("来自 " + message.getSender() + "\n");
                     jTextArea_chat.append(message.getContent() + "\n\n");
+                    //自动下滚
+                    jScrollBar_chat.validate();
+                    jScrollBar_chat.setValue(jScrollBar_chat.getMaximum());
                     continue;
                 }
 
                 jTextArea_chat.append("来自 " + message.getFromIp() + "\n");
                 jTextArea_chat.append(message.getContent() + "\n\n");
-
+                //自动下滚
                 jScrollBar_chat.validate();
                 jScrollBar_chat.setValue(jScrollBar_chat.getMaximum());
 
