@@ -56,6 +56,11 @@ public class MyFile {
         }
         return msg;
     }
+
+    public File getResFile(String path){
+        return new File(getClass().getClassLoader().getResource(path).getFile());
+    }
+
     static String ReadHTML(String path) throws IOException {
         byte[] bytes= Files.readAllBytes(Paths.get(path));
         return new String(bytes, StandardCharsets.UTF_8);

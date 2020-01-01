@@ -1,4 +1,6 @@
-package club.lanhaoo.chat; /**
+package club.lanhaoo.chat;
+
+/**
  * @Author: LanHao
  * @Website:https://lanhaoo.club/
  * @Created_Date:8:49 PM_9/29/2019
@@ -20,7 +22,6 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -38,6 +39,7 @@ public class ClientChat {
     private JScrollPane jscrollpane_message;
     private JButton serverIPButton;
     private JButton fileShareButton;
+    private JButton aboutButton;
 
     public static void main(String[] args) throws IOException {
 
@@ -302,6 +304,35 @@ public class ClientChat {
                         System.out.println(((DefaultListModel) listModel_ip).get(list_index));
                         singleTalk.openWindow(((DefaultListModel) listModel_ip).get(list_index).toString(), userSettings);
                     }
+                }
+            });
+
+            JButton jButton_about=clientChat.aboutButton;
+            jButton_about.addMouseListener(new MouseListener() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+
+                }
+
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    About about=new About();
+                    about.openWindow();
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+
                 }
             });
 

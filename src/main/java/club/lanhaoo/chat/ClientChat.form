@@ -108,6 +108,16 @@
               <text value="FileShare"/>
             </properties>
           </component>
+          <component id="bf96f" class="javax.swing.JToolBar$Separator">
+            <constraints/>
+            <properties/>
+          </component>
+          <component id="8ff91" class="javax.swing.JButton" binding="aboutButton" default-binding="true">
+            <constraints/>
+            <properties>
+              <text value="About"/>
+            </properties>
+          </component>
         </children>
       </toolbar>
       <scrollpane id="cdf45" binding="jscrollpane_message">

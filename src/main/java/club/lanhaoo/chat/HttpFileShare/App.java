@@ -51,6 +51,11 @@ public class App extends NanoHTTPD {
     public Response serve(IHTTPSession session){
         Map<String, String> parms = session.getParms();
         String msg = "";
+        if (parms.get("getAssets")!=null){
+            msg=new MyFile().getResString(parms.get("getAssets"));
+            String mime= URLConnection.guessContentTypeFromName(new MyFile().getResFile(parms.get("getAssets")).getName());
+            return newFixedLengthResponse(Response.Status.OK,mime,msg);
+        }
 
         if (parms.get("checkpass")!=null) {
             if (!parms.get("checkpass").equals(webpassword)) {
@@ -61,19 +66,6 @@ public class App extends NanoHTTPD {
             return newFixedLengthResponse(new MyFile().getResString("needpassword.html"));
         }
 //       #======= get css & js & json_data
-        if (parms.get("getcss")!=null){
-            msg=new MyFile().getResString("bootstrap.min.css");
-            return newFixedLengthResponse(Response.Status.OK,"text/css",msg);
-        }
-        if (parms.get("getjq")!=null){
-            msg=new MyFile().getResString("jquary34.js");
-            return newFixedLengthResponse(Response.Status.OK,"text/javascript",msg);
-        }
-        if (parms.get("getcssjs")!=null){
-            msg=new MyFile().getResString("bootstrap.min.js");
-            return newFixedLengthResponse(Response.Status.OK,"text/javascript",msg);
-        }
-
 
         if (parms.get("getjson")!=null){
 
