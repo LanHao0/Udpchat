@@ -38,6 +38,7 @@ public class SingleTalk {
         final JLabel jLabel_other = singleTalk.labelIp;
         jLabel_other.setText(IP);
 
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         final JTextArea jTextArea_message = singleTalk.textArea_message;
 
         JButton jButton_send = singleTalk.sendButton;

@@ -83,9 +83,9 @@ public class App extends NanoHTTPD {
                         fis = new FileInputStream(file);
                         MIME_TYPE= URLConnection.guessContentTypeFromName(file.getName());
                         response = newFixedLengthResponse(Response.Status.OK,MIME_TYPE,fis,fis.getChannel().size());
-                    } catch (FileNotFoundException e) {
+                    } catch (IOException e) {
                         e.printStackTrace();
-                    }catch (IOException e){ }
+                    }
                     response.addHeader("Content-Disposition:","attachment; filename=\""+  URLEncoder.encode(file.getName())+"\"");
 
                     return response;

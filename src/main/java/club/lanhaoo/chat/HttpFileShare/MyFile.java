@@ -19,8 +19,6 @@ public class MyFile {
             arrayList.add(new MyEveryFileProperties(file.getPath(),file.getPath(),false));
         }
         Gson gson=new Gson();
-
-
         return gson.toJson(arrayList);
     }
 
@@ -40,10 +38,7 @@ public class MyFile {
 
         }
         Gson gson = new Gson();
-
         return gson.toJson(arrayList);
-
-
     }
 
     public String getResString(String path){

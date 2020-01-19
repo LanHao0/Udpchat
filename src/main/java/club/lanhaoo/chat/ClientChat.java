@@ -8,7 +8,6 @@ package club.lanhaoo.chat;
  */
 
 
-
 import club.lanhaoo.chat.HttpFileShare.App;
 import com.google.gson.Gson;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -202,6 +201,35 @@ public class ClientChat {
             }
         });
 
+        JButton jButton_about = clientChat.aboutButton;
+        jButton_about.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                About about = new About();
+                about.openWindow();
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
+
 
         jTextArea_chat.append("开始客户端，将使用端口2113\n");
         final String serverIP = JOptionPane.showInputDialog("服务器地址");
@@ -282,96 +310,30 @@ public class ClientChat {
 
 
 //        接收服务器数据
-        try {
-            jTextArea_chat.append("开始接收服务器数据\n=============\n");
-            DatagramSocket datagramSocket = new DatagramSocket(12251);
-            byte[] bytes_from_server = new byte[1024];
-            DatagramPacket datagramPacket = new DatagramPacket(bytes_from_server, bytes_from_server.length);
 
+        jTextArea_chat.append("开始接收服务器数据\n=============\n");
 
-            ArrayList arr_ip = new ArrayList();
-            final ListModel listModel_ip = new DefaultListModel();
-            jList_iplist.setModel(listModel_ip);
-            //设置list模型
-            jList_iplist.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-                    super.mouseClicked(e);
-                    if (e.getClickCount() == 2) {
-                        int list_index = jList_iplist.locationToIndex(e.getPoint());
-                        System.out.println("点击的是" + list_index);
-                        SingleTalk singleTalk = new SingleTalk();
-                        System.out.println(((DefaultListModel) listModel_ip).get(list_index));
-                        singleTalk.openWindow(((DefaultListModel) listModel_ip).get(list_index).toString(), userSettings);
-                    }
+        ArrayList arr_ip = new ArrayList();
+        final ListModel listModel_ip = new DefaultListModel();
+        jList_iplist.setModel(listModel_ip);
+        //设置list模型
+        jList_iplist.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                if (e.getClickCount() == 2) {
+                    int list_index = jList_iplist.locationToIndex(e.getPoint());
+                    System.out.println("点击的是" + list_index);
+                    SingleTalk singleTalk = new SingleTalk();
+                    System.out.println(((DefaultListModel) listModel_ip).get(list_index));
+                    singleTalk.openWindow(((DefaultListModel) listModel_ip).get(list_index).toString(), userSettings);
                 }
-            });
-
-            JButton jButton_about=clientChat.aboutButton;
-            jButton_about.addMouseListener(new MouseListener() {
-                @Override
-                public void mouseClicked(MouseEvent e) {
-
-                }
-
-                @Override
-                public void mousePressed(MouseEvent e) {
-                    About about=new About();
-                    about.openWindow();
-                }
-
-                @Override
-                public void mouseReleased(MouseEvent e) {
-
-                }
-
-                @Override
-                public void mouseEntered(MouseEvent e) {
-
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-
-                }
-            });
-
-            JScrollBar jScrollBar_chat = jScrollPane.getVerticalScrollBar();
-
-            while (true) {
-                datagramSocket.receive(datagramPacket);
-                //todo 接受到的消息都是来自服务端的。。。。
-
-                String message_pure = new String(datagramPacket.getData(), 0, datagramPacket.getLength(), "UTF-8");
-
-                Gson gson = new Gson();
-                Message message = gson.fromJson(message_pure, Message.class);
-
-                if (!arr_ip.contains(message.getFromIp())) {
-                    arr_ip.add(message.getFromIp());
-                    ((DefaultListModel) listModel_ip).addElement(message.getFromIp());
-                }
-
-                if (message.getSender() != null) {
-                    jTextArea_chat.append("来自 " + message.getSender() + "\n");
-                    jTextArea_chat.append(message.getContent() + "\n\n");
-                    //自动下滚
-                    jScrollBar_chat.validate();
-                    jScrollBar_chat.setValue(jScrollBar_chat.getMaximum());
-                    continue;
-                }
-
-                jTextArea_chat.append("来自 " + message.getFromIp() + "\n");
-                jTextArea_chat.append(message.getContent() + "\n\n");
-                //自动下滚
-                jScrollBar_chat.validate();
-                jScrollBar_chat.setValue(jScrollBar_chat.getMaximum());
-
             }
+        });
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        JScrollBar jScrollBar_chat = jScrollPane.getVerticalScrollBar();
+        ClientChatReceiveThead clientChatReceiveThead=new ClientChatReceiveThead(jTextArea_chat,jScrollBar_chat,arr_ip,listModel_ip);
+        clientChatReceiveThead.run();
 
 //接收服务器数据
 
