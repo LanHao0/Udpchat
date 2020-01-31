@@ -8,9 +8,27 @@
 package club.lanhaoo.chat;
 
 import club.lanhaoo.chat.HttpFileShare.MyFile;
+import com.google.gson.*;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+
+
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 
 public class About {
     private JTextArea textArea1;
@@ -24,8 +42,12 @@ public class About {
         final About about=new About();
         frame.setContentPane(about.Jpanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        //设置居中
+        Point point = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
+        frame.setBounds(point.x - 600 / 2, point.y - 400 / 2, 600, 400);
         frame.pack();
         frame.setVisible(true);
+        frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
         about.openSourceLicensesCreditButton.addMouseListener(new MouseListener() {
             @Override
@@ -85,5 +107,131 @@ public class About {
 
             }
         });
+
+        about.checkUpdateButton.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                try {
+                    update(about);
+                } catch (URISyntaxException | IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
+    }
+
+
+    private void update(About about) throws URISyntaxException, IOException {
+
+        HttpGet httpGet;
+
+        URI uri_update_api=new URIBuilder("https://www.lanhaoo.club/lab/drawing/api/pc_udpchat_version.php")
+                    .setParameter("now_version","1")
+                    .build();
+        httpGet = new HttpGet(uri_update_api);
+
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        CloseableHttpResponse httpResponse = null;
+
+
+        try {
+
+            httpResponse = httpClient.execute(httpGet);
+            if (httpResponse.getStatusLine().getStatusCode()==200){
+                String content= EntityUtils.toString(httpResponse.getEntity(), StandardCharsets.UTF_8);
+
+                Gson gson = new Gson();
+                JsonArray jsonArray=gson.fromJson(content,JsonArray.class);
+                System.out.println(jsonArray.size());
+                if(jsonArray.size()<=1){
+                    //No updates
+                    about.textArea1.setText("Your software is up to date!");
+
+                }else{
+                    //has Updates
+                    //循环检查level中是否有大于3的,第一个是当前版本,不用管
+
+                    boolean hasLevel3=false;
+                    boolean hasLevel2=false;
+                    boolean recoomend_update=false;
+
+                    JsonObject jsonObject =jsonArray.get(jsonArray.size()-1).getAsJsonObject();
+                    String update_detail=jsonObject.get("update_content").getAsString();
+                    String url=jsonObject.get("url").getAsString();
+                    String raw_time=jsonObject.get("time").getAsString();
+
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                    String time=sdf.format(Long.parseLong(raw_time+"000"));
+
+                    for (int i=1;i<jsonArray.size();i++){
+
+
+                        String Slevel=jsonArray.get(i).getAsJsonObject().get("level").getAsString();
+                        int level=Integer.parseInt(Slevel);
+
+                        if (level>=3){
+                            hasLevel3=true;
+                            recoomend_update=true;
+                            break;
+                        }
+                        if (level==2){
+                            hasLevel2=true;
+                            recoomend_update=true;
+                        }
+                    }
+
+                    if (recoomend_update){
+                        if (hasLevel2){
+                            //level2 updates yellow_recommend
+                            about.textArea1.setText("Recommend Update");
+
+                        }
+                        if(hasLevel3){
+                            //level3 updates red_Have to
+                            about.textArea1.setText("Really need to Update!!!");
+                        }
+                    }else{
+                        //level1 updates blue_you can decide
+                        about.textArea1.setText("Regular Update, Don't have to");
+                    }
+                    about.textArea1.append("\n" +
+                            "Update detail:\n"+update_detail+"\n" +
+                            "Download url:\n"+url+"\n" +
+                            "Time: "+time);
+
+                }
+
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }finally {
+            if (httpResponse!=null){
+                httpResponse.close();
+            }
+            httpClient.close();
+        }
+
+
     }
 }

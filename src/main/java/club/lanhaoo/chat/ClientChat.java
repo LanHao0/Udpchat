@@ -8,8 +8,9 @@ package club.lanhaoo.chat;
  */
 
 
+import club.lanhaoo.chat.Classes.Message;
+import club.lanhaoo.chat.Classes.UserSettings;
 import club.lanhaoo.chat.HttpFileShare.App;
-import com.google.gson.Gson;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import fi.iki.elonen.NanoHTTPD;
@@ -18,8 +19,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Date;
@@ -332,7 +331,7 @@ public class ClientChat {
         });
 
         JScrollBar jScrollBar_chat = jScrollPane.getVerticalScrollBar();
-        ClientChatReceiveThead clientChatReceiveThead=new ClientChatReceiveThead(jTextArea_chat,jScrollBar_chat,arr_ip,listModel_ip);
+        ClientChatReceiveThread clientChatReceiveThead=new ClientChatReceiveThread(jTextArea_chat,jScrollBar_chat,arr_ip,listModel_ip);
         clientChatReceiveThead.run();
 
 //接收服务器数据

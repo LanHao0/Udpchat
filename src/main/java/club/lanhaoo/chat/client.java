@@ -1,5 +1,7 @@
 package club.lanhaoo.chat;
 
+import club.lanhaoo.chat.Classes.Message;
+import club.lanhaoo.chat.Classes.UserSettings;
 import club.lanhaoo.chat.HttpFileShare.App;
 
 import java.util.Date;

@@ -7,12 +7,13 @@
 
 package club.lanhaoo.chat;
 
+import club.lanhaoo.chat.Classes.Message;
+import club.lanhaoo.chat.Classes.UserSettings;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.Date;

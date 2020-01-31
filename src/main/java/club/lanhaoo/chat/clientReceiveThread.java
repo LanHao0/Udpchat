@@ -1,12 +1,11 @@
 package club.lanhaoo.chat;
 
+import club.lanhaoo.chat.Classes.Message;
 import com.google.gson.Gson;
 
-import javax.swing.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.nio.charset.StandardCharsets;
-import java.util.Scanner;
 
 /**
  * @Author: LanHao

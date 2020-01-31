@@ -5,7 +5,7 @@
  * @Magic_Power_Of_Code!
  */
 
-package club.lanhaoo.chat;
+package club.lanhaoo.chat.Classes;
 
 import com.google.gson.Gson;
 

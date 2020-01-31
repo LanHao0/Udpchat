@@ -7,24 +7,23 @@
 
 package club.lanhaoo.chat;
 
+import club.lanhaoo.chat.Classes.Message;
 import com.google.gson.Gson;
 
 import javax.swing.*;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
-public class ClientChatReceiveThead implements Runnable {
+public class ClientChatReceiveThread implements Runnable {
     private JTextArea jTextArea;
     private JScrollBar jScrollBar;
     private ArrayList arrayList;
     private ListModel listModel;
 
-    public ClientChatReceiveThead(JTextArea jTextArea, JScrollBar jScrollBar, ArrayList arrayList,ListModel listModel) {
+    public ClientChatReceiveThread(JTextArea jTextArea, JScrollBar jScrollBar, ArrayList arrayList, ListModel listModel) {
         this.jTextArea = jTextArea;
         this.jScrollBar = jScrollBar;
         this.arrayList = arrayList;
