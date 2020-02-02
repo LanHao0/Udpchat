@@ -53,14 +53,9 @@ public class ClientChatReceiveThread implements Runnable {
 
                 if (message.getSender() != null) {
                     jTextArea.append("来自 " + message.getSender() + "\n");
-                    jTextArea.append(message.getContent() + "\n\n");
-                    //自动下滚
-                    jScrollBar.validate();
-                    jScrollBar.setValue(jScrollBar.getMaximum());
-                    continue;
+                }else{
+                    jTextArea.append("来自 " + message.getFromIp() + "\n");
                 }
-
-                jTextArea.append("来自 " + message.getFromIp() + "\n");
                 jTextArea.append(message.getContent() + "\n\n");
                 //自动下滚
                 jScrollBar.validate();

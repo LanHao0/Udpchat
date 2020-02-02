@@ -34,11 +34,9 @@ public class clientReceiveThread implements Runnable {
 
                 if(message.getSender()!=null){
                     System.out.println("来自 "+message.getSender());
-                    System.out.println(message.getContent()+'\n');
-                    continue;
+                }else{
+                    System.out.println("来自 "+message.getFromIp());
                 }
-
-                System.out.println("来自 "+message.getFromIp());
                 System.out.println(message.getContent()+'\n');
             }
 
