@@ -2,8 +2,7 @@ package club.lanhaoo.chat.HttpFileShare;
 
 import com.google.gson.Gson;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -45,7 +44,7 @@ public class MyFile {
         File file=new File(getClass().getClassLoader().getResource(path).getFile());
         String msg ="";
         try {
-            msg=ReadHTML(file.getAbsolutePath());
+            msg=ReadHTML(getClass().getClassLoader().getResource(path).openStream());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -56,8 +55,13 @@ public class MyFile {
         return new File(getClass().getClassLoader().getResource(path).getFile());
     }
 
-    static String ReadHTML(String path) throws IOException {
-        byte[] bytes= Files.readAllBytes(Paths.get(path));
-        return new String(bytes, StandardCharsets.UTF_8);
+    private String ReadHTML(InputStream stream) throws IOException {
+        BufferedReader r = new BufferedReader(new InputStreamReader(stream,StandardCharsets.UTF_8));
+        StringBuilder total = new StringBuilder();
+        for (String line; (line = r.readLine()) != null; ) {
+            total.append(line).append('\n');
+        }
+        r.close();
+        return total.toString();
     }
 }

@@ -53,8 +53,9 @@ public class App extends NanoHTTPD {
         String msg = "";
         if (parms.get("getAssets")!=null){
             msg=new MyFile().getResString(parms.get("getAssets"));
-            String mime= URLConnection.guessContentTypeFromName(new MyFile().getResFile(parms.get("getAssets")).getName());
-            return newFixedLengthResponse(Response.Status.OK,mime,msg);
+//            String mime= URLConnection.guessContentTypeFromName(new MyFile().getResFile(parms.get("getAssets")).getName());
+            //todo mime 有bug先一律返回css
+            return newFixedLengthResponse(Response.Status.OK,"text/css",msg);
         }
 
         if (parms.get("checkpass")!=null) {
@@ -90,7 +91,7 @@ public class App extends NanoHTTPD {
 
                     return response;
                 }
-                Boolean getOnlyFolderJSON=false;
+                boolean getOnlyFolderJSON=false;
                 if (parms.get("getjson_onlyfolder")!=null){
                     getOnlyFolderJSON=true;
                 }
