@@ -44,14 +44,9 @@
         </properties>
         <border type="none"/>
         <children>
-          <component id="f273c" class="javax.swing.JTextArea" binding="textArea1_chat">
+          <component id="1eecb" class="javax.swing.JList" binding="messageJList">
             <constraints/>
-            <properties>
-              <editable value="false"/>
-              <lineWrap value="true"/>
-              <margin top="0" left="0" bottom="0" right="0"/>
-              <wrapStyleWord value="true"/>
-            </properties>
+            <properties/>
           </component>
         </children>
       </scrollpane>

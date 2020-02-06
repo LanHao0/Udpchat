@@ -18,16 +18,19 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 
 public class ClientChatReceiveThread implements Runnable {
-    private JTextArea jTextArea;
     private JScrollBar jScrollBar;
-    private ArrayList arrayList;
+    private ArrayList<String> arrayList;
     private ListModel listModel;
+    private ListModel listModel_message;
 
-    public ClientChatReceiveThread(JTextArea jTextArea, JScrollBar jScrollBar, ArrayList arrayList, ListModel listModel) {
-        this.jTextArea = jTextArea;
+
+    public ClientChatReceiveThread(JScrollBar jScrollBar,
+                                   ListModel listModel,
+                                   ListModel listModel_message) {
         this.jScrollBar = jScrollBar;
-        this.arrayList = arrayList;
-        this.listModel=listModel;
+        this.arrayList = new ArrayList<String>();
+        this.listModel = listModel;
+        this.listModel_message = listModel_message;
     }
 
     @Override
@@ -50,16 +53,18 @@ public class ClientChatReceiveThread implements Runnable {
                     arrayList.add(message.getFromIp());
                     ((DefaultListModel) listModel).addElement(message.getFromIp());
                 }
-
+                StringBuilder msg=new StringBuilder();
                 if (message.getSender() != null) {
-                    jTextArea.append("来自 " + message.getSender() + "\n");
+                    msg.append("来自 " + message.getSender() + "\n");
                 }else{
-                    jTextArea.append("来自 " + message.getFromIp() + "\n");
+                    msg.append("来自 " + message.getFromIp() + "\n");
                 }
-                jTextArea.append(message.getContent() + "\n\n");
+
+                msg.append("<br>").append(message.getContent());
+                ((DefaultListModel)listModel_message).addElement(msg.toString());
                 //自动下滚
                 jScrollBar.validate();
-                jScrollBar.setValue(jScrollBar.getMaximum());
+                jScrollBar.setValue(((DefaultListModel) listModel_message).size()-1);
             }
         } catch (IOException e) {
             e.printStackTrace();

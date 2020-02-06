@@ -38,6 +38,7 @@ public class ClientChat {
     private JButton serverIPButton;
     private JButton fileShareButton;
     private JButton aboutButton;
+    private JList messageJList;
 
     public static void main(String[] args) throws IOException {
 
@@ -49,10 +50,9 @@ public class ClientChat {
         ClientChat clientChat = new ClientChat();
 
         JPanel jPanel = clientChat.panel1;
-        final JTextArea jTextArea_chat = clientChat.textArea1_chat;
+
         final JTextArea jTextArea_message = clientChat.textArea_message;
 
-        final JList jList_iplist = clientChat.list1;
 
         JButton jButton_send = clientChat.sendButton;
 
@@ -73,6 +73,10 @@ public class ClientChat {
         frame.setVisible(true);
         jTextArea_message.grabFocus();
         //获取焦点
+
+        final ListModel listModel_message=new DefaultListModel();
+
+
 
         JButton jButton_severIP = clientChat.serverIPButton;
         jButton_severIP.addMouseListener(new MouseListener() {
@@ -108,10 +112,10 @@ public class ClientChat {
             public void mousePressed(MouseEvent e) {
                 userSettings.setHidemyIp(!userSettings.getHidemyIp());
                 if (userSettings.getHidemyIp()) {
-                    jTextArea_chat.append("已设置隐藏ip, 若已设置昵称 需要重新设置昵称\n");
+                    ((DefaultListModel)listModel_message).addElement("已设置隐藏ip, 若已设置昵称 需要重新设置昵称\n");
                     userSettings.setUserName(null);
                 } else {
-                    jTextArea_chat.append("已显示ip\n");
+                    ((DefaultListModel)listModel_message).addElement("已显示ip\n");
                 }
             }
 
@@ -130,41 +134,29 @@ public class ClientChat {
 
         JButton jButton_Nickname = clientChat.nicknameButton;
         jButton_Nickname.addMouseListener(new MouseListener() {
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) { }
 
             public void mousePressed(MouseEvent e) {
-                String username=JOptionPane.showInputDialog("输入自定义昵称");
-                if(username!=null&& !username.equals("")){
+                String username = JOptionPane.showInputDialog("输入自定义昵称");
+                if (username != null && !username.equals("")) {
                     userSettings.setUserName(username);
-                    jTextArea_chat.append("已设置昵称" + userSettings.getUserName() + "\n");
-                }else {
+                    ((DefaultListModel)listModel_message).addElement("已设置昵称" + userSettings.getUserName() + "\n");
+                } else {
                     userSettings.setUserName(null);
                 }
 
             }
 
-            public void mouseReleased(MouseEvent e) {
-
-            }
-
-            public void mouseEntered(MouseEvent e) {
-
-            }
-
-            public void mouseExited(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) { }
+            public void mouseEntered(MouseEvent e) { }
+            public void mouseExited(MouseEvent e) { }
         });
         final JButton jButton_fileShare = clientChat.fileShareButton;
         final App app = new App();
 
         jButton_fileShare.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) { }
 
             @Override
             public void mousePressed(MouseEvent e) {
@@ -173,13 +165,13 @@ public class ClientChat {
                     app.stop();
                     userSettings.setOnFileSharing(false);
                     jButton_fileShare.setText("FileShare");
-                    jTextArea_chat.append("已停止分享文件\n");
+                    ((DefaultListModel)listModel_message).addElement("已停止分享文件\n");
+
                 } else {
                     app.setWebpassword(JOptionPane.showInputDialog("设置密码?"));
                     try {
                         app.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
-
-                        jTextArea_chat.append("开始分享文件,ip地址: " + InetAddress.getLocalHost().getHostAddress() + ":8089 \n");
+                        ((DefaultListModel)listModel_message).addElement("开始分享文件,ip地址: " + InetAddress.getLocalHost().getHostAddress() + ":8089 \n");
                         jButton_fileShare.setText("停止分享文件");
 
                     } catch (IOException ex) {
@@ -192,27 +184,17 @@ public class ClientChat {
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
-
+            public void mouseReleased(MouseEvent e) { }
             @Override
-            public void mouseEntered(MouseEvent e) {
-
-            }
-
+            public void mouseEntered(MouseEvent e) { }
             @Override
-            public void mouseExited(MouseEvent e) {
-
-            }
+            public void mouseExited(MouseEvent e) { }
         });
 
         JButton jButton_about = clientChat.aboutButton;
         jButton_about.addMouseListener(new MouseListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) { }
 
             @Override
             public void mousePressed(MouseEvent e) {
@@ -221,108 +203,59 @@ public class ClientChat {
             }
 
             @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
-
+            public void mouseReleased(MouseEvent e) { }
             @Override
-            public void mouseEntered(MouseEvent e) {
-
-            }
-
+            public void mouseEntered(MouseEvent e) { }
             @Override
-            public void mouseExited(MouseEvent e) {
-
-            }
+            public void mouseExited(MouseEvent e) { }
         });
 
 
-        jTextArea_chat.append("开始客户端，将使用端口2113\n");
         final String serverIP = JOptionPane.showInputDialog("服务器地址");
-
         userSettings.setServerIp(serverIP);
-        jTextArea_chat.append("将使用 " + serverIP + " 作为服务器地址\n");
 
 
         //        发送按钮监听
         jButton_send.addMouseListener(new MouseListener() {
-            public void mouseClicked(MouseEvent e) {
-
-            }
+            public void mouseClicked(MouseEvent e) { }
 
             public void mousePressed(MouseEvent e) {
-                String pure_message = jTextArea_message.getText();
-//
-//                if (setname){
-//                    raw_Data="[with_name]"+username+"@"+raw_Data;
-//
-//                }
-
-                long mtime = new Date().getTime();
-                Message message = new Message("text", "", pure_message, String.valueOf(mtime));
-                message.setFromIp(Server.getIpAddress());
-
-                if (message.send(userSettings)) {
-                    jTextArea_message.setText(null);
-                } else {
-                    jTextArea_chat.append("发送失败\n");
-                }
-
-
+                SendMessage(jTextArea_message,userSettings,listModel_message);
             }
 
-            public void mouseReleased(MouseEvent e) {
-
-            }
-
-            public void mouseEntered(MouseEvent e) {
-
-            }
-
-            public void mouseExited(MouseEvent e) {
-
-            }
+            public void mouseReleased(MouseEvent e) { }
+            public void mouseEntered(MouseEvent e) { }
+            public void mouseExited(MouseEvent e) { }
         });
 
 
         jTextArea_message.addKeyListener(new KeyListener() {
-            public void keyTyped(KeyEvent e) {
-
-            }
+            public void keyTyped(KeyEvent e) { }
 
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-
-                    String pure_message = jTextArea_message.getText();
-
-                    long mtime = new Date().getTime();
-                    Message message = new Message("text", "", pure_message, String.valueOf(mtime));
-                    message.setFromIp(Server.getIpAddress());
-
-                    if (message.send(userSettings)) {
-                        jTextArea_message.setText(null);
-                    } else {
-                        jTextArea_chat.append("发送失败\n");
-                    }
-
-
+                    SendMessage(jTextArea_message,userSettings,listModel_message);
                 }
             }
 
-            public void keyReleased(KeyEvent e) {
-
-            }
+            public void keyReleased(KeyEvent e) { }
         });
 
 
 //        接收服务器数据
 
-        jTextArea_chat.append("开始接收服务器数据\n=============\n");
 
-        ArrayList arr_ip = new ArrayList();
+        JList jList_Message =clientChat.messageJList;
+
+        jList_Message.setModel(listModel_message);
+        ((DefaultListModel)listModel_message).addElement("开始接收服务器数据<br>=============<br>");
+
+
+        final JList jList_iplist = clientChat.list1;
         final ListModel listModel_ip = new DefaultListModel();
         jList_iplist.setModel(listModel_ip);
         //设置list模型
+
         jList_iplist.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -337,13 +270,31 @@ public class ClientChat {
             }
         });
 
+
+
+
         JScrollBar jScrollBar_chat = jScrollPane.getVerticalScrollBar();
-        ClientChatReceiveThread clientChatReceiveThead=new ClientChatReceiveThread(jTextArea_chat,jScrollBar_chat,arr_ip,listModel_ip);
-        clientChatReceiveThead.run();
+        ClientChatReceiveThread cCRT = new ClientChatReceiveThread(
+                jScrollBar_chat, listModel_ip,listModel_message);
+        cCRT.run();
 
 //接收服务器数据
 
 
+    }
+
+    private static void SendMessage(JTextArea jTextArea_message, UserSettings userSettings, ListModel listModel_message){
+        String pure_message = jTextArea_message.getText();
+
+        long mtime = new Date().getTime();
+        Message message = new Message("text", "", pure_message, String.valueOf(mtime));
+        message.setFromIp(Server.getIpAddress());
+
+        if (message.send(userSettings)) {
+            jTextArea_message.setText(null);
+        } else {
+            ((DefaultListModel)listModel_message).addElement("发送失败\n");
+        }
     }
 
     private void createUIComponents() {
