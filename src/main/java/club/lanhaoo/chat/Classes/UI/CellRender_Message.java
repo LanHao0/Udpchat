@@ -16,13 +16,13 @@ import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 
-public class CellRender_Message implements ListCellRenderer {
+public class CellRender_Message extends JTextArea implements ListCellRenderer {
     private TitledBorder titledBorder;
     private Message message;
 
-    protected ListCellRenderer listCellRenderer=new DefaultListCellRenderer();
 
     @Override
+
     public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
         message=(Message) list.getModel().getElementAt(index);
 
@@ -31,18 +31,26 @@ public class CellRender_Message implements ListCellRenderer {
         }else {
             titledBorder=new TitledBorder(LineBorder.createBlackLineBorder(),message.getFromIp());
         }
-        JLabel jLabel= (JLabel) listCellRenderer.getListCellRendererComponent(list,value,index,isSelected,cellHasFocus);
 
-        jLabel.setBorder(titledBorder);
-        jLabel.setText(message.getContent());
+        int width=list.getWidth();
+//        https://stackoverflow.com/questions/58270489/how-to-select-row-in-jlist-where-each-cell-contains-jpanel-that-contains-jtextar
 
+        JTextArea jTextArea=new JTextArea();
+        jTextArea.setText(message.getContent());
+        jTextArea.setBorder(titledBorder);
+        jTextArea.setSize(width,Short.MAX_VALUE);
+
+        //todo 限制大小,不然只能横向很怪
         if (isSelected){
             StringSelection stringSelection = new StringSelection(message.getContent());
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(stringSelection,stringSelection);
+            jTextArea.setBackground(Color.lightGray);
+        }else {
+            jTextArea.setBackground(Color.white);
         }
 
-        return jLabel;
+        return jTextArea;
     }
 }
 

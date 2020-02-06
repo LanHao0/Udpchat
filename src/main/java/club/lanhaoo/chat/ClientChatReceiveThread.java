@@ -11,6 +11,7 @@ import club.lanhaoo.chat.Classes.Message;
 import com.google.gson.Gson;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -31,6 +32,7 @@ public class ClientChatReceiveThread implements Runnable {
         this.arrayList = new ArrayList<String>();
         this.listModel = listModel;
         this.listModel_message = listModel_message;
+
     }
 
     @Override
@@ -51,11 +53,14 @@ public class ClientChatReceiveThread implements Runnable {
 
                 if (!arrayList.contains(message.getFromIp())) {
                     arrayList.add(message.getFromIp());
+                    ((DefaultListModel)listModel).addElement(message.getFromIp());
                 }
+
                 ((DefaultListModel)listModel_message).addElement(message);
                 //自动下滚
                 jScrollBar.validate();
                 jScrollBar.setValue(jScrollBar.getMaximum());
+
             }
         } catch (IOException e) {
             e.printStackTrace();

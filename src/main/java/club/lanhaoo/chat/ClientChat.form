@@ -40,13 +40,16 @@
           <grid row="2" column="0" row-span="2" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <horizontalScrollBarPolicy value="31"/>
+          <horizontalScrollBarPolicy value="30"/>
         </properties>
         <border type="none"/>
         <children>
           <component id="1eecb" class="javax.swing.JList" binding="messageJList">
             <constraints/>
-            <properties/>
+            <properties>
+              <fixedCellHeight value="-1"/>
+              <fixedCellWidth value="-1"/>
+            </properties>
           </component>
         </children>
       </scrollpane>
@@ -117,7 +120,7 @@
       </toolbar>
       <scrollpane id="cdf45" binding="jscrollpane_message">
         <constraints>
-          <grid row="4" column="0" row-span="2" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
+          <grid row="4" column="0" row-span="2" col-span="1" vsize-policy="6" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
             <preferred-size width="-1" height="40"/>
           </grid>
         </constraints>

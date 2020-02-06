@@ -278,7 +278,6 @@ public class ClientChat {
 
 
 
-
         JScrollBar jScrollBar_chat = jScrollPane.getVerticalScrollBar();
         ClientChatReceiveThread cCRT = new ClientChatReceiveThread(
                 jScrollBar_chat, listModel_ip,listModel_message);
