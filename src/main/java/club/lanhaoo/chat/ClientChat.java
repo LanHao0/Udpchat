@@ -53,6 +53,7 @@ public class ClientChat {
         final JTextArea jTextArea_message = clientChat.textArea_message;
 
         final JList jList_iplist = clientChat.list1;
+
         JButton jButton_send = clientChat.sendButton;
 
         JScrollPane jScrollPane = clientChat.scrollPane1;
@@ -134,8 +135,14 @@ public class ClientChat {
             }
 
             public void mousePressed(MouseEvent e) {
-                userSettings.setUserName(JOptionPane.showInputDialog("输入自定义昵称"));
-                jTextArea_chat.append("已设置昵称" + userSettings.getUserName() + "\n");
+                String username=JOptionPane.showInputDialog("输入自定义昵称");
+                if(username!=null&& !username.equals("")){
+                    userSettings.setUserName(username);
+                    jTextArea_chat.append("已设置昵称" + userSettings.getUserName() + "\n");
+                }else {
+                    userSettings.setUserName(null);
+                }
+
             }
 
             public void mouseReleased(MouseEvent e) {
