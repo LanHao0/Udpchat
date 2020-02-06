@@ -13,26 +13,37 @@ import javax.swing.*;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 
 public class CellRender_Message implements ListCellRenderer {
     private TitledBorder titledBorder;
     private Message message;
 
+    protected ListCellRenderer listCellRenderer=new DefaultListCellRenderer();
 
     @Override
     public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
         message=(Message) list.getModel().getElementAt(index);
 
-        DefaultListCellRenderer defaultListCellRenderer =new DefaultListCellRenderer();
         if (message.getSender() != null ) {
             titledBorder=new TitledBorder(LineBorder.createBlackLineBorder(),message.getSender());
         }else {
             titledBorder=new TitledBorder(LineBorder.createBlackLineBorder(),message.getFromIp());
         }
+        JLabel jLabel= (JLabel) listCellRenderer.getListCellRendererComponent(list,value,index,isSelected,cellHasFocus);
 
-        JLabel jLabel=(JLabel) defaultListCellRenderer.getListCellRendererComponent(list,value,index,isSelected,cellHasFocus);
         jLabel.setBorder(titledBorder);
         jLabel.setText(message.getContent());
+
+        if (isSelected){
+            StringSelection stringSelection = new StringSelection(message.getContent());
+            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+            clipboard.setContents(stringSelection,stringSelection);
+        }
+
         return jLabel;
     }
 }
+
+//http://www.java2s.com/Tutorial/Java/0240__Swing/AddyourownListCellRenderer.htm
