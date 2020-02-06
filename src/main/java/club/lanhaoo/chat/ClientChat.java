@@ -9,6 +9,7 @@ package club.lanhaoo.chat;
 
 
 import club.lanhaoo.chat.Classes.Message;
+import club.lanhaoo.chat.Classes.UI.CellRender_Message;
 import club.lanhaoo.chat.Classes.UserSettings;
 import club.lanhaoo.chat.HttpFileShare.App;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -112,10 +113,12 @@ public class ClientChat {
             public void mousePressed(MouseEvent e) {
                 userSettings.setHidemyIp(!userSettings.getHidemyIp());
                 if (userSettings.getHidemyIp()) {
-                    ((DefaultListModel)listModel_message).addElement("已设置隐藏ip, 若已设置昵称 需要重新设置昵称\n");
+                    ((DefaultListModel)listModel_message).addElement(new Message("local",
+                            "","已设置隐藏ip, 若已设置昵称 需要重新设置昵称"));
                     userSettings.setUserName(null);
                 } else {
-                    ((DefaultListModel)listModel_message).addElement("已显示ip\n");
+                    ((DefaultListModel)listModel_message).addElement(new Message("local",
+                            "","已显示IP"));
                 }
             }
 
@@ -140,7 +143,7 @@ public class ClientChat {
                 String username = JOptionPane.showInputDialog("输入自定义昵称");
                 if (username != null && !username.equals("")) {
                     userSettings.setUserName(username);
-                    ((DefaultListModel)listModel_message).addElement("已设置昵称" + userSettings.getUserName() + "\n");
+                    ((DefaultListModel)listModel_message).addElement(new Message("local","","已设置昵称" + userSettings.getUserName()));
                 } else {
                     userSettings.setUserName(null);
                 }
@@ -165,13 +168,14 @@ public class ClientChat {
                     app.stop();
                     userSettings.setOnFileSharing(false);
                     jButton_fileShare.setText("FileShare");
-                    ((DefaultListModel)listModel_message).addElement("已停止分享文件\n");
+                    ((DefaultListModel)listModel_message).addElement(new Message("local","","已停止分享文件"));
 
                 } else {
                     app.setWebpassword(JOptionPane.showInputDialog("设置密码?"));
                     try {
                         app.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
-                        ((DefaultListModel)listModel_message).addElement("开始分享文件,ip地址: " + InetAddress.getLocalHost().getHostAddress() + ":8089 \n");
+
+                        ((DefaultListModel)listModel_message).addElement(new Message("local","","开始分享文件,ip地址: " + InetAddress.getLocalHost().getHostAddress() + ":8089"));
                         jButton_fileShare.setText("停止分享文件");
 
                     } catch (IOException ex) {
@@ -248,8 +252,10 @@ public class ClientChat {
         JList jList_Message =clientChat.messageJList;
 
         jList_Message.setModel(listModel_message);
-        ((DefaultListModel)listModel_message).addElement("开始接收服务器数据<br>=============<br>");
 
+        ((DefaultListModel)listModel_message).addElement(new Message("local","","开始接收服务器数据"));
+        CellRender_Message listCellRenderer=new CellRender_Message();
+        jList_Message.setCellRenderer(listCellRenderer);
 
         final JList jList_iplist = clientChat.list1;
         final ListModel listModel_ip = new DefaultListModel();
@@ -286,14 +292,13 @@ public class ClientChat {
     private static void SendMessage(JTextArea jTextArea_message, UserSettings userSettings, ListModel listModel_message){
         String pure_message = jTextArea_message.getText();
 
-        long mtime = new Date().getTime();
-        Message message = new Message("text", "", pure_message, String.valueOf(mtime));
+        Message message = new Message("text", "", pure_message);
         message.setFromIp(Server.getIpAddress());
 
         if (message.send(userSettings)) {
             jTextArea_message.setText(null);
         } else {
-            ((DefaultListModel)listModel_message).addElement("发送失败\n");
+            ((DefaultListModel)listModel_message).addElement(new Message("local","","发送失败"));
         }
     }
 

@@ -67,7 +67,7 @@ public class Server {
                 //如果来自被封禁IP，则不进行操作
                 String bannedtips = "你已被管理员封禁，无法发送群消息&[系统消息]";
                 long mtime = new Date().getTime();
-                Message message_back = new Message("text", "", bannedtips, String.valueOf(mtime));
+                Message message_back = new Message("text", "", bannedtips);
                 if (!message_back.send(fromIP)) {
                     System.out.println("发送失败\n");
                 }
@@ -118,8 +118,7 @@ public class Server {
                         Message message_go=new Message(
                                 "system",
                                 "",
-                                mcontent,
-                                String.valueOf(mtime));
+                                mcontent);
                         message_go.serverSend(broadcast_ip);
                         continue;
                     }

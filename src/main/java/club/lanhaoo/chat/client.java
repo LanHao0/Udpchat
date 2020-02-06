@@ -64,7 +64,7 @@ public class client {
 
                 long mtime = new Date().getTime();
 
-                Message message = new Message("text", "SYSTEM_COMMAND."+command_sys, raw_Data, String.valueOf(mtime));
+                Message message = new Message("text", "SYSTEM_COMMAND."+command_sys, raw_Data);
                 if (!message.send(userSettings)) {
                     System.out.println("发送失败\n");
                 }
@@ -80,7 +80,7 @@ public class client {
                     String string=raw_Data.split("#")[2];
 
                     long mtime = new Date().getTime();
-                    Message message = new Message("text", "", string, String.valueOf(mtime));
+                    Message message = new Message("text", "", string);
 
                     if (!message.send(toip)) {
                         System.out.println("发送失败\n");
@@ -127,7 +127,7 @@ public class client {
             }
 
             long mtime = new Date().getTime();
-            Message message = new Message("text", "", raw_Data, String.valueOf(mtime));
+            Message message = new Message("text", "", raw_Data);
             message.setFromIp(Server.getIpAddress());
 
             if (!message.send(userSettings)) {

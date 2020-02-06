@@ -51,20 +51,11 @@ public class ClientChatReceiveThread implements Runnable {
 
                 if (!arrayList.contains(message.getFromIp())) {
                     arrayList.add(message.getFromIp());
-                    ((DefaultListModel) listModel).addElement(message.getFromIp());
                 }
-                StringBuilder msg=new StringBuilder();
-                if (message.getSender() != null) {
-                    msg.append("来自 " + message.getSender() + "\n");
-                }else{
-                    msg.append("来自 " + message.getFromIp() + "\n");
-                }
-
-                msg.append("<br>").append(message.getContent());
-                ((DefaultListModel)listModel_message).addElement(msg.toString());
+                ((DefaultListModel)listModel_message).addElement(message);
                 //自动下滚
                 jScrollBar.validate();
-                jScrollBar.setValue(((DefaultListModel) listModel_message).size()-1);
+                jScrollBar.setValue(jScrollBar.getMaximum());
             }
         } catch (IOException e) {
             e.printStackTrace();

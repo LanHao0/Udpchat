@@ -53,7 +53,7 @@ public class SingleTalk {
                 String pure_message = jTextArea_message.getText();
 
                 long mtime = new Date().getTime();
-                Message message = new Message("text", "", pure_message, String.valueOf(mtime));
+                Message message = new Message("text", "", pure_message);
                 if (message.send(jLabel_other.getText())) {
                     jTextArea_message.setText(null);
                 } else {

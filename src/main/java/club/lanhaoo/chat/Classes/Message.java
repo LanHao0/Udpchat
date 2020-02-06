@@ -12,6 +12,7 @@ import com.google.gson.Gson;
 import java.io.IOException;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 
 public class Message {
     private String type;
@@ -21,11 +22,17 @@ public class Message {
     private String timestamp;
     private String fromIp;
 
-    public Message(String mtype,String mcommand, String mcontent, String mtimestamp){
+    public Message(String mtype,String mcommand, String mcontent){
         type=mtype;
         command=mcommand;
         content=mcontent;
-        timestamp=mtimestamp;
+        long mtime = new Date().getTime();
+        timestamp=String.valueOf(mtime);
+
+        if (mtype.equals("local")){
+            fromIp="127.0.0.1";
+            sender="本地";
+        }
     }
 
     public void setType(String type) {
