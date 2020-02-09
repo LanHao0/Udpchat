@@ -32,25 +32,30 @@ public class CellRender_Message extends JTextArea implements ListCellRenderer {
             titledBorder=new TitledBorder(LineBorder.createBlackLineBorder(),message.getFromIp());
         }
 
-        int width=list.getWidth();
 //        https://stackoverflow.com/questions/58270489/how-to-select-row-in-jlist-where-each-cell-contains-jpanel-that-contains-jtextar
+
+        JPanel jPanel=new JPanel();
+        jPanel.setBorder(titledBorder);
 
         JTextArea jTextArea=new JTextArea();
         jTextArea.setText(message.getContent());
-        jTextArea.setBorder(titledBorder);
-        jTextArea.setSize(width,Short.MAX_VALUE);
-
-        //todo 限制大小,不然只能横向很怪
+        jTextArea.setLineWrap(true);
+        jTextArea.setBackground(new Color(238,238,238));
         if (isSelected){
             StringSelection stringSelection = new StringSelection(message.getContent());
             Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
             clipboard.setContents(stringSelection,stringSelection);
             jTextArea.setBackground(Color.lightGray);
         }else {
-            jTextArea.setBackground(Color.white);
+            jTextArea.setBackground(new Color(238,238,238));
         }
 
-        return jTextArea;
+
+
+        jPanel.setLayout(new GridLayout());
+        jPanel.add(jTextArea);
+
+        return jPanel;
     }
 }
 

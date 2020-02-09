@@ -69,7 +69,7 @@ public class ClientChat {
         //设置居中
         Point point = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
         frame.setBounds(point.x - 600 / 2, point.y - 400 / 2, 600, 400);
-
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
         frame.pack();
         frame.setVisible(true);
         jTextArea_message.grabFocus();
@@ -237,12 +237,17 @@ public class ClientChat {
             public void keyTyped(KeyEvent e) { }
 
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER &&e.isAltDown()) {
                     SendMessage(jTextArea_message,userSettings,listModel_message);
                 }
+
             }
 
-            public void keyReleased(KeyEvent e) { }
+            public void keyReleased(KeyEvent e) {
+                if (e.getKeyCode()==KeyEvent.VK_ENTER&&e.isAltDown()){
+                    jTextArea_message.setText("");
+                }
+            }
         });
 
 
@@ -295,7 +300,7 @@ public class ClientChat {
         message.setFromIp(Server.getIpAddress());
 
         if (message.send(userSettings)) {
-            jTextArea_message.setText(null);
+            jTextArea_message.grabFocus();
         } else {
             ((DefaultListModel)listModel_message).addElement(new Message("local","","发送失败"));
         }
