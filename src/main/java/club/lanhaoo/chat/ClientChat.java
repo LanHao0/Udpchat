@@ -10,19 +10,22 @@ package club.lanhaoo.chat;
 
 import club.lanhaoo.chat.Classes.Message;
 import club.lanhaoo.chat.Classes.UI.CellRender_Message;
+import club.lanhaoo.chat.Classes.UI.ImageFilter;
 import club.lanhaoo.chat.Classes.UserSettings;
 import club.lanhaoo.chat.HttpFileShare.App;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import fi.iki.elonen.NanoHTTPD;
+import org.apache.commons.io.FilenameUtils;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+
 import java.io.IOException;
 import java.net.InetAddress;
-import java.util.ArrayList;
-import java.util.Date;
+
 
 public class ClientChat {
     private JTextArea textArea1_chat;
@@ -40,13 +43,14 @@ public class ClientChat {
     private JButton fileShareButton;
     private JButton aboutButton;
     private JList messageJList;
+    private JButton sendPicturesButton;
 
     public static void main(String[] args) throws IOException {
 
 
         final UserSettings userSettings = new UserSettings();
 
-        JFrame frame = new JFrame("ClientChat");
+        final JFrame frame = new JFrame("ClientChat");
 
         ClientChat clientChat = new ClientChat();
 
@@ -75,107 +79,66 @@ public class ClientChat {
         jTextArea_message.grabFocus();
         //获取焦点
 
-        final ListModel listModel_message=new DefaultListModel();
-
+        final ListModel listModel_message = new DefaultListModel();
 
 
         JButton jButton_severIP = clientChat.serverIPButton;
-        jButton_severIP.addMouseListener(new MouseListener() {
-            public void mouseClicked(MouseEvent e) {
-
-            }
-
-            public void mousePressed(MouseEvent e) {
+        jButton_severIP.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
                 userSettings.setServerIp(JOptionPane.showInputDialog("重设服务器IP:"));
-            }
-
-            public void mouseReleased(MouseEvent e) {
-
-            }
-
-            public void mouseEntered(MouseEvent e) {
-
-            }
-
-            public void mouseExited(MouseEvent e) {
-
             }
         });
 
 
-        //回车监听
         JButton jButton_HideIp = clientChat.hideIPButton;
-        jButton_HideIp.addMouseListener(new MouseListener() {
-            public void mouseClicked(MouseEvent e) {
-
-            }
-
-            public void mousePressed(MouseEvent e) {
+        jButton_HideIp.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
                 userSettings.setHidemyIp(!userSettings.getHidemyIp());
                 if (userSettings.getHidemyIp()) {
-                    ((DefaultListModel)listModel_message).addElement(new Message("local",
-                            "","已设置隐藏ip, 若已设置昵称 需要重新设置昵称"));
+                    ((DefaultListModel) listModel_message).addElement(new Message("local",
+                            "", "已设置隐藏ip, 若已设置昵称 需要重新设置昵称"));
                     userSettings.setUserName(null);
                 } else {
-                    ((DefaultListModel)listModel_message).addElement(new Message("local",
-                            "","已显示IP"));
+                    ((DefaultListModel) listModel_message).addElement(new Message("local",
+                            "", "已显示IP"));
                 }
-            }
-
-            public void mouseReleased(MouseEvent e) {
-
-            }
-
-            public void mouseEntered(MouseEvent e) {
-
-            }
-
-            public void mouseExited(MouseEvent e) {
-
             }
         });
 
         JButton jButton_Nickname = clientChat.nicknameButton;
-        jButton_Nickname.addMouseListener(new MouseListener() {
-            public void mouseClicked(MouseEvent e) { }
-
-            public void mousePressed(MouseEvent e) {
+        jButton_Nickname.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
                 String username = JOptionPane.showInputDialog("输入自定义昵称");
                 if (username != null && !username.equals("")) {
                     userSettings.setUserName(username);
-                    ((DefaultListModel)listModel_message).addElement(new Message("local","","已设置昵称" + userSettings.getUserName()));
+                    ((DefaultListModel) listModel_message).addElement(new Message("local", "", "已设置昵称" + userSettings.getUserName()));
                 } else {
                     userSettings.setUserName(null);
                 }
-
             }
-
-            public void mouseReleased(MouseEvent e) { }
-            public void mouseEntered(MouseEvent e) { }
-            public void mouseExited(MouseEvent e) { }
         });
+
         final JButton jButton_fileShare = clientChat.fileShareButton;
         final App app = new App();
 
-        jButton_fileShare.addMouseListener(new MouseListener() {
+        jButton_fileShare.addActionListener(new ActionListener() {
             @Override
-            public void mouseClicked(MouseEvent e) { }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-
+            public void actionPerformed(ActionEvent e) {
                 if (userSettings.isOnFileSharing()) {
                     app.stop();
                     userSettings.setOnFileSharing(false);
                     jButton_fileShare.setText("FileShare");
-                    ((DefaultListModel)listModel_message).addElement(new Message("local","","已停止分享文件"));
+                    ((DefaultListModel) listModel_message).addElement(new Message("local", "", "已停止分享文件"));
 
                 } else {
                     app.setWebpassword(JOptionPane.showInputDialog("设置密码?"));
                     try {
                         app.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
 
-                        ((DefaultListModel)listModel_message).addElement(new Message("local","","开始分享文件,ip地址: " + InetAddress.getLocalHost().getHostAddress() + ":8089"));
+                        ((DefaultListModel) listModel_message).addElement(new Message("local", "", "开始分享文件,ip地址: " + InetAddress.getLocalHost().getHostAddress() + ":8089"));
                         jButton_fileShare.setText("停止分享文件");
 
                     } catch (IOException ex) {
@@ -184,34 +147,16 @@ public class ClientChat {
                     userSettings.setOnFileSharing(true);
                 }
 
-
             }
-
-            @Override
-            public void mouseReleased(MouseEvent e) { }
-            @Override
-            public void mouseEntered(MouseEvent e) { }
-            @Override
-            public void mouseExited(MouseEvent e) { }
         });
 
         JButton jButton_about = clientChat.aboutButton;
-        jButton_about.addMouseListener(new MouseListener() {
+        jButton_about.addActionListener(new ActionListener() {
             @Override
-            public void mouseClicked(MouseEvent e) { }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
+            public void actionPerformed(ActionEvent e) {
                 About about = new About();
                 about.openWindow();
             }
-
-            @Override
-            public void mouseReleased(MouseEvent e) { }
-            @Override
-            public void mouseEntered(MouseEvent e) { }
-            @Override
-            public void mouseExited(MouseEvent e) { }
         });
 
 
@@ -220,31 +165,42 @@ public class ClientChat {
 
 
         //        发送按钮监听
-        jButton_send.addMouseListener(new MouseListener() {
-            public void mouseClicked(MouseEvent e) { }
-
-            public void mousePressed(MouseEvent e) {
-                SendMessage(jTextArea_message,userSettings,listModel_message);
+        jButton_send.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SendMessage(jTextArea_message, userSettings, listModel_message);
             }
-
-            public void mouseReleased(MouseEvent e) { }
-            public void mouseEntered(MouseEvent e) { }
-            public void mouseExited(MouseEvent e) { }
         });
 
+        JButton send_pic = clientChat.sendPicturesButton;
+        send_pic.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser jFileChooser = new JFileChooser();
+                ImageFilter imageFilter = new ImageFilter();
+                jFileChooser.setFileFilter(imageFilter);
+                if (jFileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+                    File f = jFileChooser.getSelectedFile();
+
+                    // read  and/or display the file somehow. ....
+                }
+
+            }
+        });
 
         jTextArea_message.addKeyListener(new KeyListener() {
-            public void keyTyped(KeyEvent e) { }
+            public void keyTyped(KeyEvent e) {
+            }
 
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER &&e.isAltDown()) {
-                    SendMessage(jTextArea_message,userSettings,listModel_message);
+                if (e.getKeyCode() == KeyEvent.VK_ENTER && e.isAltDown()) {
+                    SendMessage(jTextArea_message, userSettings, listModel_message);
                 }
 
             }
 
             public void keyReleased(KeyEvent e) {
-                if (e.getKeyCode()==KeyEvent.VK_ENTER&&e.isAltDown()){
+                if (e.getKeyCode() == KeyEvent.VK_ENTER && e.isAltDown()) {
                     jTextArea_message.setText("");
                 }
             }
@@ -254,12 +210,12 @@ public class ClientChat {
 //        接收服务器数据
 
 
-        JList jList_Message =clientChat.messageJList;
+        JList jList_Message = clientChat.messageJList;
 
         jList_Message.setModel(listModel_message);
 
-        ((DefaultListModel)listModel_message).addElement(new Message("local","","开始接收服务器数据"));
-        CellRender_Message listCellRenderer=new CellRender_Message();
+        ((DefaultListModel) listModel_message).addElement(new Message("local", "", "开始接收服务器数据"));
+        CellRender_Message listCellRenderer = new CellRender_Message();
         jList_Message.setCellRenderer(listCellRenderer);
 
         final JList jList_iplist = clientChat.list1;
@@ -282,10 +238,9 @@ public class ClientChat {
         });
 
 
-
         JScrollBar jScrollBar_chat = jScrollPane.getVerticalScrollBar();
         ClientChatReceiveThread cCRT = new ClientChatReceiveThread(
-                jScrollBar_chat, listModel_ip,listModel_message);
+                jScrollBar_chat, listModel_ip, listModel_message);
         cCRT.run();
 
 //接收服务器数据
@@ -293,7 +248,7 @@ public class ClientChat {
 
     }
 
-    private static void SendMessage(JTextArea jTextArea_message, UserSettings userSettings, ListModel listModel_message){
+    private static void SendMessage(JTextArea jTextArea_message, UserSettings userSettings, ListModel listModel_message) {
         String pure_message = jTextArea_message.getText();
 
         Message message = new Message("text", "", pure_message);
@@ -302,8 +257,9 @@ public class ClientChat {
         if (message.send(userSettings)) {
             jTextArea_message.grabFocus();
         } else {
-            ((DefaultListModel)listModel_message).addElement(new Message("local","","发送失败"));
+            ((DefaultListModel) listModel_message).addElement(new Message("local", "", "发送失败"));
         }
+        jTextArea_message.setText("");
     }
 
     private void createUIComponents() {

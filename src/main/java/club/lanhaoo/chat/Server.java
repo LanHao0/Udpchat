@@ -35,6 +35,7 @@ public class Server {
         System.out.println("广播地址: " + broadcast_ip);
 
         byte[] bytes = new byte[1024];
+
         DatagramSocket datagramSocket = new DatagramSocket(2112);
         DatagramPacket datagramPacket = new DatagramPacket(bytes, bytes.length);
         System.out.println("在 " + localHost + " : 2112" + "上运行服务端 ");
