@@ -3,8 +3,11 @@ package club.lanhaoo.chat;
 import club.lanhaoo.chat.Classes.Message;
 import com.google.gson.Gson;
 
+import java.math.BigInteger;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -63,6 +66,10 @@ public class Server {
 
             Iplist.add(fromIP);
             //todo 超级命令登陆ip
+
+            new Message("confirm","", message.getMD5()).send(fromIP);
+
+
 
             if (BanIp.contains(fromIP)) {
                 //如果来自被封禁IP，则不进行操作

@@ -1,5 +1,6 @@
 package club.lanhaoo.chat;
 
+import club.lanhaoo.chat.Classes.GlobalThings;
 import club.lanhaoo.chat.Classes.Message;
 import com.google.gson.Gson;
 
@@ -31,6 +32,13 @@ public class clientReceiveThread implements Runnable {
                 String message_pure=new String(datagramPacket.getData(),0,datagramPacket.getLength(), StandardCharsets.UTF_8);
                 Gson gson=new Gson();
                 Message message=gson.fromJson(message_pure,Message.class);
+
+                if (message.getType().equals("confirm")){
+                    GlobalThings.confirmMD5.add(message.getContent());
+//                    System.out.println(GlobalThings.confirmMD5);
+                    continue;
+                }
+
 
                 if(message.getSender()!=null){
                     System.out.println("来自 "+message.getSender());

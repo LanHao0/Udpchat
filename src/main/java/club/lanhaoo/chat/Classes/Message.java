@@ -13,8 +13,11 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 public class Message {
@@ -90,7 +93,7 @@ public class Message {
 
     public boolean send(String toIp) {
         try {
-            this.setContent("[私聊消息]" + content);
+//            this.setContent("[私聊消息]" + content);
             new DatagramSend(12251, this, toIp).send();
             return true;
         } catch (Exception e1) {
@@ -132,4 +135,18 @@ public class Message {
     }
 
 
+    public String getMD5(){
+        Gson gson=new Gson();
+        byte[] bytesOfMessage =gson.toJson(this).getBytes(StandardCharsets.UTF_8);
+        MessageDigest md5 = null;
+        try {
+            md5 = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        byte[] thedigest = md5.digest(bytesOfMessage);
+        BigInteger bigInt = new BigInteger(1,thedigest);
+        String hashtext = bigInt.toString(16);
+        return hashtext;
+    }
 }
