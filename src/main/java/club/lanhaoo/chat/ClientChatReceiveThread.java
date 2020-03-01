@@ -7,6 +7,7 @@
 
 package club.lanhaoo.chat;
 
+import club.lanhaoo.chat.Classes.GlobalThings;
 import club.lanhaoo.chat.Classes.Message;
 import com.google.gson.Gson;
 
@@ -50,6 +51,12 @@ public class ClientChatReceiveThread implements Runnable {
 
                 Gson gson = new Gson();
                 Message message = gson.fromJson(message_pure, Message.class);
+
+                if (message.getType().equals("confirm")){
+                    GlobalThings.confirmMD5.add(message.getContent());
+//                    System.out.println(GlobalThings.confirmMD5);
+                    continue;
+                }
 
                 if (!arrayList.contains(message.getFromIp())) {
                     arrayList.add(message.getFromIp());
