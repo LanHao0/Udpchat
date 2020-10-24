@@ -3,8 +3,11 @@ package club.lanhaoo.chat;
 import club.lanhaoo.chat.Classes.Message;
 import com.google.gson.Gson;
 
+import java.math.BigInteger;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
@@ -35,6 +38,7 @@ public class Server {
         System.out.println("广播地址: " + broadcast_ip);
 
         byte[] bytes = new byte[1024];
+
         DatagramSocket datagramSocket = new DatagramSocket(2112);
         DatagramPacket datagramPacket = new DatagramPacket(bytes, bytes.length);
         System.out.println("在 " + localHost + " : 2112" + "上运行服务端 ");
@@ -62,6 +66,10 @@ public class Server {
 
             Iplist.add(fromIP);
             //todo 超级命令登陆ip
+
+            new Message("confirm","", message.getMD5()).send(fromIP);
+
+
 
             if (BanIp.contains(fromIP)) {
                 //如果来自被封禁IP，则不进行操作

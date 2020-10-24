@@ -8,10 +8,16 @@
 package club.lanhaoo.chat.Classes;
 
 import com.google.gson.Gson;
+import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
+import org.apache.commons.io.FileUtils;
 
+import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 
 public class Message {
@@ -21,25 +27,35 @@ public class Message {
     private String content;
     private String timestamp;
     private String fromIp;
+    private String imgBase64;
 
-    public Message(String mtype,String mcommand, String mcontent){
-        type=mtype;
-        command=mcommand;
-        content=mcontent;
-        long mtime = new Date().getTime();
-        timestamp=String.valueOf(mtime);
 
-        if (mtype.equals("local")){
-            fromIp="127.0.0.1";
-            sender="本地";
+    public String getImgBase64() {
+        return imgBase64;
+    }
+
+    public void setImgBase64(String imgBase64) {
+        this.imgBase64 = imgBase64;
+    }
+
+    public Message(String mtype, String mcommand, String mcontent) {
+        type = mtype;
+        command = mcommand;
+        content = mcontent;
+        timestamp = getTime();
+
+        if (mtype.equals("local")) {
+            fromIp = "127.0.0.1";
+            sender = "本地";
         }
     }
+
 
     public void setType(String type) {
         this.type = type;
     }
 
-    public String getType(){
+    public String getType() {
         return type;
     }
 
@@ -75,66 +91,62 @@ public class Message {
         this.content = content;
     }
 
-    public boolean send(String toIp){
+    public boolean send(String toIp) {
         try {
-            DatagramSocket datagramSocket2=new DatagramSocket(2113);
-            this.setContent("[私聊消息]"+content);
-            Gson gson=new Gson();
-            String raw_data=gson.toJson(this);
-
-            byte[] bytes=raw_data.getBytes(StandardCharsets.UTF_8);
-
-            DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length, InetAddress.getByName(toIp),12251);
-
-            datagramSocket2.send(datagramPacket);
-
-            datagramSocket2.close();
+//            this.setContent("[私聊消息]" + content);
+            new DatagramSend(12251, this, toIp).send();
             return true;
-        }catch (Exception e1){
+        } catch (Exception e1) {
             System.out.println(e1);
-            return false;
         }
+        return false;
     }
 
-    public boolean serverSend(String broadcast_ip){
+    public boolean serverSend(String broadcast_ip) {
         try {
-            DatagramSocket datagramSocket2=new DatagramSocket(2113);
-            Gson gson=new Gson();
-            String raw_data=gson.toJson(this);
-            System.out.println(raw_data);
-
-            datagramSocket2.send(new DatagramPacket(raw_data.getBytes(StandardCharsets.UTF_8), raw_data.getBytes(StandardCharsets.UTF_8).length, InetAddress.getByName(broadcast_ip), 12251));
-            datagramSocket2.close();
+            new DatagramSend(12251, this, broadcast_ip).send();
             return true;
         } catch (IOException e) {
             e.printStackTrace();
         }
         return false;
     }
-    public boolean send(UserSettings userSettings){
-        try {
-            DatagramSocket datagramSocket2=new DatagramSocket(2113);
 
-            if (userSettings.getUserName()!=null){
-                this.sender=userSettings.getUserName();
-            }
-            if (userSettings.getHidemyIp()){
-                this.setSender("[匿名消息]");
-            }
-            Gson gson=new Gson();
-            String raw_Data = gson.toJson(this);
-            byte[] bytes=raw_Data.getBytes(StandardCharsets.UTF_8);
-
-            DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length, InetAddress.getByName(userSettings.getServerIp()),2112);
-
-            datagramSocket2.send(datagramPacket);
-
-            datagramSocket2.close();
-            return true;
-        }catch (Exception e1){
-            System.out.println(e1);
-            return false;
+    public boolean send(UserSettings userSettings) {
+        if (userSettings.getUserName() != null) {
+            this.sender = userSettings.getUserName();
         }
+        if (userSettings.getHidemyIp()) {
+            this.setSender("[匿名消息]");
+        }
+
+        try {
+            new DatagramSend(2112, this, userSettings.getServerIp()).send();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
+    private String getTime() {
+        long mtime = new Date().getTime();
+        return String.valueOf(mtime);
+    }
+
+
+    public String getMD5(){
+        Gson gson=new Gson();
+        byte[] bytesOfMessage =gson.toJson(this).getBytes(StandardCharsets.UTF_8);
+        MessageDigest md5 = null;
+        try {
+            md5 = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        byte[] thedigest = md5.digest(bytesOfMessage);
+        BigInteger bigInt = new BigInteger(1,thedigest);
+        String hashtext = bigInt.toString(16);
+        return hashtext;
+    }
 }
