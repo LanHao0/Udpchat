@@ -4,7 +4,6 @@ import club.lanhaoo.chat.Classes.Message;
 import club.lanhaoo.chat.Classes.UserSettings;
 import club.lanhaoo.chat.HttpFileShare.App;
 
-import java.util.Date;
 import java.util.Scanner;
 
 
@@ -42,8 +41,7 @@ public class client {
 
         while (inCommunication){
 
-            Scanner scanner=new Scanner(System.in);
-            String raw_Data=scanner.nextLine();
+            String raw_Data=sc.nextLine();
 
 //            含有系统命令
             if (raw_Data.startsWith("SYSTEM_COMMAND.")){
@@ -61,8 +59,10 @@ public class client {
                 if (raw_Data.contains("WHOIS")){
                     command_sys="WHOIS";
                 }
-
-                long mtime = new Date().getTime();
+                if (command_sys == null) {
+                    System.out.println("未知系统命令");
+                    continue;
+                }
 
                 Message message = new Message("text", "SYSTEM_COMMAND."+command_sys, raw_Data);
                 if (!message.send(userSettings)) {
@@ -76,14 +76,17 @@ public class client {
             if (raw_Data.startsWith("UserCommand.")){
 
                 if (raw_Data.contains(secret_Talk)){
-                    String toip=raw_Data.split("#")[1];
-                    String string=raw_Data.split("#")[2];
+                    String[] commandParts = raw_Data.split("#", 3);
+                    if (commandParts.length < 3) {
+                        System.out.println("secretTalk 格式错误，应为 UserCommand.secretTalk#ip#content");
+                    } else {
+                        String toip = commandParts[1];
+                        String string = commandParts[2];
+                        Message message = new Message("text", "", string);
 
-                    long mtime = new Date().getTime();
-                    Message message = new Message("text", "", string);
-
-                    if (!message.send(toip)) {
-                        System.out.println("发送失败\n");
+                        if (!message.send(toip)) {
+                            System.out.println("发送失败\n");
+                        }
                     }
                 }
 
@@ -112,7 +115,7 @@ public class client {
                 if (raw_Data.contains("fileShare")){
                     if (!userSettings.isOnFileSharing()){
                         System.out.println("请设置文件分享密码");
-                        app_fileShare.setWebpassword(scanner.nextLine());
+                        app_fileShare.setWebpassword(sc.nextLine());
                         System.out.println("开始文件分享,端口8089,密码 "+app_fileShare.getWebpassword());
                         app_fileShare.start();
                         userSettings.setOnFileSharing(true);
@@ -126,7 +129,6 @@ public class client {
                 continue;
             }
 
-            long mtime = new Date().getTime();
             Message message = new Message("text", "", raw_Data);
             message.setFromIp(Server.getIpAddress());
 

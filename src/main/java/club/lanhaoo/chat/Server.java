@@ -3,14 +3,12 @@ package club.lanhaoo.chat;
 import club.lanhaoo.chat.Classes.Message;
 import com.google.gson.Gson;
 
-import java.math.BigInteger;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.List;
 
 /**
  * @Author: LanHao
@@ -44,8 +42,8 @@ public class Server {
         System.out.println("在 " + localHost + " : 2112" + "上运行服务端 ");
         boolean ServerOn = true;
 
-        ArrayList Iplist = new ArrayList();
-        ArrayList BanIp = new ArrayList();
+        List<String> ipList = new ArrayList<String>();
+        List<String> banIp = new ArrayList<String>();
 
         String serverPassword="mima111";
 
@@ -61,17 +59,23 @@ public class Server {
             Gson gson = new Gson();
             Message message = gson.fromJson(pure_message, Message.class);
 
-            String message_content=message.getContent();
+            String message_content = message.getContent();
             String command = message.getCommand();
+            if (message_content == null) {
+                message_content = "";
+            }
+            if (command == null) {
+                command = "";
+            }
 
-            Iplist.add(fromIP);
+            ipList.add(fromIP);
             //todo 超级命令登陆ip
 
             new Message("confirm","", message.getMD5()).send(fromIP);
 
 
 
-            if (BanIp.contains(fromIP)) {
+            if (banIp.contains(fromIP)) {
                 //如果来自被封禁IP，则不进行操作
                 String bannedtips = "你已被管理员封禁，无法发送群消息&[系统消息]";
                 long mtime = new Date().getTime();
@@ -98,18 +102,24 @@ public class Server {
                 if (command.contains("SYSTEM_COMMAND")) {
                     if (message_content.contains(serverPassword)){
                         String mcontent=null;
+                        String[] commandParts = message_content.split("#");
+                        String targetIp = commandParts.length > 2 ? commandParts[2] : null;
 
                         if (command.contains(banipCommand)){
-                            BanIp.add(message_content.split("#")[2]);
-                            System.out.println("Banned ip:" + message_content.split("#")[2]);
-                            mcontent="已封禁IP: "+fromIP;
+                            if (targetIp != null) {
+                                banIp.add(targetIp);
+                                System.out.println("Banned ip:" + targetIp);
+                                mcontent="已封禁IP: "+targetIp;
+                            }
 
                         }
 
                         if (command.contains(unbanipCommand)){
-                            BanIp.remove(message_content.split("#")[2]);
-                            System.out.println("Unbanned ip:" + message_content.split("#")[2]);
-                            mcontent="解封IP: "+fromIP;
+                            if (targetIp != null) {
+                                banIp.remove(targetIp);
+                                System.out.println("Unbanned ip:" + targetIp);
+                                mcontent="解封IP: "+targetIp;
+                            }
 
                         }
 

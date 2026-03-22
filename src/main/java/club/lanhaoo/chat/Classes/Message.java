@@ -8,10 +8,6 @@
 package club.lanhaoo.chat.Classes;
 
 import com.google.gson.Gson;
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.*;
@@ -138,15 +134,13 @@ public class Message {
     public String getMD5(){
         Gson gson=new Gson();
         byte[] bytesOfMessage =gson.toJson(this).getBytes(StandardCharsets.UTF_8);
-        MessageDigest md5 = null;
         try {
-            md5 = MessageDigest.getInstance("MD5");
+            MessageDigest md5 = MessageDigest.getInstance("MD5");
+            byte[] thedigest = md5.digest(bytesOfMessage);
+            BigInteger bigInt = new BigInteger(1,thedigest);
+            return bigInt.toString(16);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            throw new IllegalStateException("MD5 algorithm is not available", e);
         }
-        byte[] thedigest = md5.digest(bytesOfMessage);
-        BigInteger bigInt = new BigInteger(1,thedigest);
-        String hashtext = bigInt.toString(16);
-        return hashtext;
     }
 }
