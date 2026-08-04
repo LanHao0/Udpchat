@@ -8,7 +8,17 @@
 package club.lanhaoo.chat.Classes;
 
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class GlobalThings {
-    public static ArrayList<String> confirmMD5=new ArrayList<>();
+    public String serverIP;
+    //等待服务器确认
+    public static Set<String> confirmIds =
+            ConcurrentHashMap.newKeySet();
+
+
+    //已经显示过的消息
+    public static Set<String> receivedIds =
+            ConcurrentHashMap.newKeySet();
 }

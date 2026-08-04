@@ -7,146 +7,410 @@
 
 package club.lanhaoo.chat.Classes;
 
-import com.google.gson.Gson;
-import com.sun.org.apache.xerces.internal.impl.dv.util.Base64;
-import org.apache.commons.io.FileUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.net.*;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import java.util.UUID;
+
+
+/**
+ * 消息协议
+ *
+ * messageId:
+ *      每条消息唯一编号，用于UDP ACK确认
+ *
+ * type:
+ *      CHAT     普通聊天
+ *      ACK      确认消息
+ *      SYSTEM   系统消息
+ *
+ */
+
 
 public class Message {
+
+
+    //唯一消息ID
+    private String messageId;
+
+
+    //消息类型
     private String type;
+
+
+    //发送者
     private String sender;
+
+
+    //命令
     private String command;
+
+
+    //内容
     private String content;
-    private String timestamp;
+
+
+    //时间戳
+    private long timestamp;
+
+
+    //来源IP
     private String fromIp;
+
+
+    //图片
     private String imgBase64;
 
 
-    public String getImgBase64() {
-        return imgBase64;
-    }
 
-    public void setImgBase64(String imgBase64) {
-        this.imgBase64 = imgBase64;
-    }
+    public Message(
+            String mtype,
+            String mcommand,
+            String mcontent
+    ){
 
-    public Message(String mtype, String mcommand, String mcontent) {
-        type = mtype;
-        command = mcommand;
-        content = mcontent;
-        timestamp = getTime();
 
-        if (mtype.equals("local")) {
-            fromIp = "127.0.0.1";
-            sender = "本地";
+        this.messageId =
+                UUID.randomUUID().toString();
+
+
+        this.type = mtype;
+
+
+        this.command = mcommand;
+
+
+        this.content = mcontent;
+
+
+        this.timestamp =
+                System.currentTimeMillis();
+
+
+
+        if(mtype.equals("local")){
+
+            this.fromIp="127.0.0.1";
+
+            this.sender="本地";
+
         }
+
     }
 
 
-    public void setType(String type) {
-        this.type = type;
+
+
+
+    /*
+     *
+     * messageId
+     *
+     */
+
+
+    public String getMessageId(){
+
+        return messageId;
+
     }
 
-    public String getType() {
+
+    public void setMessageId(String messageId){
+
+        this.messageId=messageId;
+
+    }
+
+
+
+
+
+    /*
+     *
+     * type
+     *
+     */
+
+
+    public String getType(){
+
         return type;
+
     }
 
-    public String getFromIp() {
-        return fromIp;
+
+    public void setType(String type){
+
+        this.type=type;
+
     }
 
-    public void setFromIp(String fromIp) {
-        this.fromIp = fromIp;
-    }
 
-    public String getCommand() {
-        return command;
-    }
 
-    public String getContent() {
-        return content;
-    }
 
-    public String getTimestamp() {
-        return timestamp;
-    }
 
-    public void setSender(String sender) {
-        this.sender = sender;
-    }
+    /*
+     *
+     * sender
+     *
+     */
 
-    public String getSender() {
+
+    public String getSender(){
+
         return sender;
+
     }
 
-    public void setContent(String content) {
-        this.content = content;
+
+    public void setSender(String sender){
+
+        this.sender=sender;
+
     }
 
-    public boolean send(String toIp) {
-        try {
-//            this.setContent("[私聊消息]" + content);
-            new DatagramSend(12251, this, toIp).send();
+
+
+
+
+    /*
+     *
+     * command
+     *
+     */
+
+
+    public String getCommand(){
+
+        return command;
+
+    }
+
+
+
+
+
+    /*
+     *
+     * content
+     *
+     */
+
+
+    public String getContent(){
+
+        return content;
+
+    }
+
+
+    public void setContent(String content){
+
+        this.content=content;
+
+    }
+
+
+
+
+
+    /*
+     *
+     * timestamp
+     *
+     */
+
+
+    public long getTimestamp(){
+
+        return timestamp;
+
+    }
+
+
+
+
+
+    /*
+     *
+     * fromIp
+     *
+     */
+
+
+    public String getFromIp(){
+
+        return fromIp;
+
+    }
+
+
+    public void setFromIp(String fromIp){
+
+        this.fromIp=fromIp;
+
+    }
+
+
+
+
+
+    /*
+     *
+     * 图片
+     *
+     */
+
+
+    public String getImgBase64(){
+
+        return imgBase64;
+
+    }
+
+
+    public void setImgBase64(String imgBase64){
+
+        this.imgBase64=imgBase64;
+
+    }
+
+
+
+
+
+
+    /**
+     *
+     * 客户端发送到服务器
+     *
+     */
+
+    public boolean send(UserSettings userSettings){
+
+
+
+        if(userSettings.getUserName()!=null){
+
+            this.sender =
+                    userSettings.getUserName();
+
+        }
+
+
+
+        if(userSettings.getHidemyIp()){
+
+            this.sender="[匿名消息]";
+
+        }
+
+
+
+        try{
+
+
+            new DatagramSend(
+                    2112,
+                    this,
+                    userSettings.getServerIp()
+            ).send();
+
+
             return true;
-        } catch (Exception e1) {
-            System.out.println(e1);
+
+
+        }catch(Exception e){
+
+            e.printStackTrace();
+
         }
+
+
         return false;
+
     }
 
-    public boolean serverSend(String broadcast_ip) {
-        try {
-            new DatagramSend(12251, this, broadcast_ip).send();
+
+
+
+
+
+    /**
+     *
+     * 服务器发送给客户端
+     *
+     */
+
+    public boolean sendToClient(String ip){
+
+
+        try{
+
+
+            new DatagramSend(
+                    12251,
+                    this,
+                    ip
+            ).sendRaw();
+
+
             return true;
-        } catch (IOException e) {
+
+
+        }catch(Exception e){
+
             e.printStackTrace();
+
         }
+
+
         return false;
+
+
     }
 
-    public boolean send(UserSettings userSettings) {
-        if (userSettings.getUserName() != null) {
-            this.sender = userSettings.getUserName();
-        }
-        if (userSettings.getHidemyIp()) {
-            this.setSender("[匿名消息]");
-        }
 
-        try {
-            new DatagramSend(2112, this, userSettings.getServerIp()).send();
+
+
+
+
+
+    /**
+     *
+     * 服务器广播
+     *
+     */
+
+    public boolean serverSend(String broadcastIp){
+
+
+        try{
+
+
+            new DatagramSend(
+                    12251,
+                    this,
+                    broadcastIp
+            ).sendRaw();
+
+
             return true;
-        } catch (IOException e) {
+
+
+        }catch(Exception e){
+
             e.printStackTrace();
+
         }
+
+
         return false;
-    }
 
-    private String getTime() {
-        long mtime = new Date().getTime();
-        return String.valueOf(mtime);
+
     }
 
 
-    public String getMD5(){
-        Gson gson=new Gson();
-        byte[] bytesOfMessage =gson.toJson(this).getBytes(StandardCharsets.UTF_8);
-        MessageDigest md5 = null;
-        try {
-            md5 = MessageDigest.getInstance("MD5");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        byte[] thedigest = md5.digest(bytesOfMessage);
-        BigInteger bigInt = new BigInteger(1,thedigest);
-        String hashtext = bigInt.toString(16);
-        return hashtext;
-    }
+
+
 }

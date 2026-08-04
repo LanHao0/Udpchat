@@ -82,7 +82,7 @@ public class client {
                     long mtime = new Date().getTime();
                     Message message = new Message("text", "", string);
 
-                    if (!message.send(toip)) {
+                    if (!message.send(userSettings)) {
                         System.out.println("发送失败\n");
                     }
                 }

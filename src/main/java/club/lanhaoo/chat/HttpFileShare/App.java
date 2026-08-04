@@ -10,9 +10,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
-import com.sun.jndi.toolkit.url.UrlUtil;
+
 import fi.iki.elonen.NanoHTTPD;
-import sun.security.provider.MD5;
+
 // NOTE: If you're using NanoHTTPD >= 3.0.0 the namespace is different,
 //       instead of the above import use the following:
 // import org.nanohttpd.NanoHTTPD;

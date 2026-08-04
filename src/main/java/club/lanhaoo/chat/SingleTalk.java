@@ -45,33 +45,90 @@ public class SingleTalk {
         JButton jButton_send = singleTalk.sendButton;
 
         jButton_send.addMouseListener(new MouseListener() {
+
             public void mouseClicked(MouseEvent e) {
 
+
             }
+
 
             public void mousePressed(MouseEvent e) {
-                String pure_message = jTextArea_message.getText();
 
-                long mtime = new Date().getTime();
-                Message message = new Message("text", "", pure_message);
-                if (message.send(jLabel_other.getText())) {
-                    jTextArea_message.setText(null);
-                } else {
-                    jTextArea_chat.append("发送失败\n");
+
+                String pure_message =
+                        jTextArea_message.getText();
+
+
+
+                if(pure_message.trim().equals("")){
+
+                    return;
+
                 }
+
+
+
+                Message message =
+                        new Message(
+                                "PRIVATE",
+                                "SINGLE_TALK",
+                                pure_message
+                        );
+
+
+
+                //目标用户IP
+                message.sendToClient(
+                        jLabel_other.getText()
+                );
+
+
+
+                //发送到服务器
+                if(message.send(userSettings)){
+
+
+                    jTextArea_chat.append(
+                            "\n我:"
+                                    +pure_message
+                    );
+
+
+                    jTextArea_message.setText(null);
+
+
+                }else{
+
+
+                    jTextArea_chat.append(
+                            "\n发送失败\n"
+                    );
+
+
+                }
+
+
             }
+
+
 
             public void mouseReleased(MouseEvent e) {
 
+
             }
+
 
             public void mouseEntered(MouseEvent e) {
 
+
             }
+
 
             public void mouseExited(MouseEvent e) {
 
+
             }
+
         });
     }
 

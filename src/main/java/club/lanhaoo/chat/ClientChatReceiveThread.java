@@ -9,6 +9,7 @@ package club.lanhaoo.chat;
 
 import club.lanhaoo.chat.Classes.GlobalThings;
 import club.lanhaoo.chat.Classes.Message;
+import club.lanhaoo.chat.Classes.UserSettings;
 import com.google.gson.Gson;
 
 import javax.swing.*;
@@ -24,15 +25,17 @@ public class ClientChatReceiveThread implements Runnable {
     private ArrayList<String> arrayList;
     private ListModel listModel;
     private ListModel listModel_message;
+    private UserSettings userSettings;
 
 
     public ClientChatReceiveThread(JScrollBar jScrollBar,
                                    ListModel listModel,
-                                   ListModel listModel_message) {
+                                   ListModel listModel_message,UserSettings userSettings) {
         this.jScrollBar = jScrollBar;
         this.arrayList = new ArrayList<String>();
         this.listModel = listModel;
         this.listModel_message = listModel_message;
+        this.userSettings = userSettings;
 
     }
 
@@ -51,19 +54,68 @@ public class ClientChatReceiveThread implements Runnable {
 
                 Gson gson = new Gson();
                 Message message = gson.fromJson(message_pure, Message.class);
-
-                if (message.getType().equals("confirm")){
-                    GlobalThings.confirmMD5.add(message.getContent());
-//                    System.out.println(GlobalThings.confirmMD5);
+                System.out.println(message_pure);
+                if (message == null) {
+                    //丢弃无法解析的报文
                     continue;
                 }
+                //ACK确认
+                if("ACK".equals(message.getType())){
+                    System.out.println(
+                            "收到ACK:"
+                                    + message.getContent()
+                    );
+                    GlobalThings.confirmIds.add(
+                            message.getContent()
+                    );
+                    continue;
 
-                if (!arrayList.contains(message.getFromIp())) {
-                    arrayList.add(message.getFromIp());
-                    ((DefaultListModel)listModel).addElement(message.getFromIp());
                 }
 
-                ((DefaultListModel)listModel_message).addElement(message);
+                String messageId = message.getMessageId();
+
+                Message ack =
+                        new Message(
+                                "ACK",
+                                "",
+                                message.getMessageId()
+                        );
+
+                ack.send(userSettings);
+                if(messageId!=null){
+
+
+                    if(GlobalThings.receivedIds.contains(messageId)){
+
+
+                        System.out.println(
+                                "重复消息:"
+                                        + messageId
+                        );
+
+
+                        continue;
+
+                    }
+
+
+                    GlobalThings.receivedIds.add(messageId);
+
+                }
+
+                SwingUtilities.invokeLater(() -> {
+
+                    if (!arrayList.contains(message.getFromIp())) {
+                        arrayList.add(message.getFromIp());
+                        ((DefaultListModel) listModel).addElement(message.getFromIp());
+                    }
+
+                    ((DefaultListModel) listModel_message).addElement(message);
+
+                    jScrollBar.setValue(jScrollBar.getMaximum());
+
+                });
+
                 //自动下滚
                 jScrollBar.validate();
                 jScrollBar.setValue(jScrollBar.getMaximum());

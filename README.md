@@ -81,3 +81,8 @@ Here're some commands you may need.
 |开启/关闭局域网共享|UserCommand.fileShare|
 |管理封禁&解封IP|SYSTEM_COMMAND.BANIP#mima111#user_ip<br>SYSTEM_COMMAND.UNBAN#mima111#user_ip|
 |管理关闭服务器|SYSTEM_COMMAND.ENDSERVER#mima111|
+
+
+###
+消息类型：
+confirm， 每条消息发送时，会伴随confirmCode，如果客户端收到，会原样返回，这样就知道这条消息已经收到了
