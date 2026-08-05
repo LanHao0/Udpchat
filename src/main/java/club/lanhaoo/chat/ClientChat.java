@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 
 public class ClientChat {
@@ -48,6 +49,7 @@ public class ClientChat {
     }
 
     public static void main(String[] args) throws IOException {
+        final ListModel listModel_message = new DefaultListModel();
 
 
         final UserSettings userSettings = new UserSettings();
@@ -69,6 +71,30 @@ public class ClientChat {
         jToolBar.setFloatable(false);
 //        阻止移动
 
+        //开启服务器按钮：在当前客户端进程内启动一个服务器（后台线程），并广播自身以便被发现
+        JButton jButton_startServer = new JButton("Start Server");
+        jToolBar.addSeparator();
+        jToolBar.add(jButton_startServer);
+        jButton_startServer.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String nick = JOptionPane.showInputDialog(frame, "服务器昵称(可留空):", Server.defaultNickname());
+                final String nickname = (nick == null || nick.trim().isEmpty()) ? Server.defaultNickname() : nick.trim();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Server.startServer(nickname);
+                        } catch (Exception ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                }).start();
+                ((DefaultListModel) listModel_message).addElement(new Message("local", "", "已启动服务器，昵称: " + nickname));
+                jButton_startServer.setText("Server: " + nickname);
+            }
+        });
+
         frame.setContentPane(jPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -81,24 +107,34 @@ public class ClientChat {
         jTextArea_message.grabFocus();
         //获取焦点
 
-        final ListModel listModel_message = new DefaultListModel();
 
 
         JButton jButton_severIP = clientChat.serverIPButton;
         jButton_severIP.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                ServerAnnouncement picked = discoverServer(frame);
-                if (picked != null) {
-                    userSettings.setServerIp(picked.getIp());
-                    jButton_severIP.setText("服务器: " + picked.toString());
-                } else {
-                    String manual = JOptionPane.showInputDialog(frame, "请输入服务器地址:");
-                    if (manual != null && !manual.trim().isEmpty()) {
-                        userSettings.setServerIp(manual.trim());
-                        jButton_severIP.setText("服务器: " + manual.trim());
+                discoverServer(frame, picked -> {
+                    if (picked != null) {
+                        userSettings.setServerIp(picked.getIp());
+                        jButton_severIP.setText("服务器: " + picked.toString());
                     }
-                }
+                });
+            }
+        });
+
+        //重新扫描服务器按钮：随时可点，弹出“扫描中”并重新发现局域网服务器
+        JButton jButton_scanServer = new JButton("Scan");
+        jToolBar.addSeparator();
+        jToolBar.add(jButton_scanServer);
+        jButton_scanServer.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                discoverServer(frame, picked -> {
+                    if (picked != null) {
+                        userSettings.setServerIp(picked.getIp());
+                        jButton_severIP.setText("服务器: " + picked.toString());
+                    }
+                });
             }
         });
 
@@ -172,17 +208,12 @@ public class ClientChat {
         });
 
 
-        ServerAnnouncement picked = discoverServer(frame);
-        if (picked != null) {
-            userSettings.setServerIp(picked.getIp());
-            jButton_severIP.setText("服务器: " + picked.toString());
-        } else {
-            String manual = JOptionPane.showInputDialog(frame, "请输入服务器地址:");
-            if (manual != null && !manual.trim().isEmpty()) {
-                userSettings.setServerIp(manual.trim());
-                jButton_severIP.setText("服务器: " + manual.trim());
+        discoverServer(frame, picked -> {
+            if (picked != null) {
+                userSettings.setServerIp(picked.getIp());
+                jButton_severIP.setText("服务器: " + picked.toString());
             }
-        }
+        });
 
 
         //        发送按钮监听
@@ -287,49 +318,126 @@ public class ClientChat {
     }
 
     /**
-     * 自动扫描局域网内的服务器，弹出选择框。
-     * 返回选中的服务器通告（含 ip / 显示名），取消或无可选项时返回 null。
+     * 扫描+选择合并窗口：持续扫描，发现的服务器实时进入列表，
+     * 双击或点“连接”即加入；另提供“手动输入”与“取消”。取消即停止扫描。
      */
-    private static ServerAnnouncement discoverServer(Component parent) {
-        List<ServerAnnouncement> servers = scanServers(3000);
-        if (servers.isEmpty()) {
-            String manual = JOptionPane.showInputDialog(parent, "未扫描到服务器，请手动输入服务器地址:");
-            if (manual == null || manual.trim().isEmpty()) return null;
-            String ip = manual.trim();
-            return new ServerAnnouncement(ip, "", ip);
-        }
+    private static void discoverServer(Component parent, Consumer<ServerAnnouncement> onResult) {
+        final List<ServerAnnouncement> found = new ArrayList<>();
+        final Set<String> seen = new HashSet<>();
+        final DefaultListModel<String> model = new DefaultListModel<>();
+        final JList<String> list = new JList<>(model);
 
-        String[] options = new String[servers.size() + 1];
-        for (int i = 0; i < servers.size(); i++) {
-            options[i] = servers.get(i).toString();
-        }
-        options[servers.size()] = "手动输入...";
+        final JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(parent), "扫描服务器", Dialog.ModalityType.MODELESS);
+        dlg.setLayout(new BorderLayout());
 
-        String sel = (String) JOptionPane.showInputDialog(
-                parent,
-                "选择服务器:",
-                "扫描到 " + servers.size() + " 个服务器",
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                options,
-                options[0]);
+        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        top.add(new JLabel("持续扫描中，双击或选“连接”加入："));
+        dlg.add(top, BorderLayout.NORTH);
+        dlg.add(new JScrollPane(list), BorderLayout.CENTER);
 
-        if (sel == null) return null;
+        JPanel btns = new JPanel();
+        JButton btnConnect = new JButton("连接");
+        JButton btnManual = new JButton("手动输入...");
+        JButton btnCancel = new JButton("取消");
+        btns.add(btnConnect);
+        btns.add(btnManual);
+        btns.add(btnCancel);
+        dlg.add(btns, BorderLayout.SOUTH);
 
-        if ("手动输入...".equals(sel)) {
-            String manual = JOptionPane.showInputDialog(parent, "请输入服务器地址:");
-            if (manual == null || manual.trim().isEmpty()) return null;
-            String ip = manual.trim();
-            return new ServerAnnouncement(ip, "", ip);
-        }
+        final boolean[] scanning = { true };
 
-        for (ServerAnnouncement a : servers) {
-            if (a.toString().equals(sel)) return a;
-        }
-        //兜底：从 "nickname/ip" 解析出 ip
-        int idx = sel.lastIndexOf('/');
-        String ip = idx >= 0 ? sel.substring(idx + 1) : sel;
-        return new ServerAnnouncement(ip, "", ip);
+        final Runnable pickSelected = new Runnable() {
+            @Override
+            public void run() {
+                int idx = list.getSelectedIndex();
+                if (idx >= 0 && idx < found.size()) {
+                    scanning[0] = false;
+                    dlg.dispose();
+                    if (onResult != null) onResult.accept(found.get(idx));
+                }
+            }
+        };
+
+        SwingWorker<Void, ServerAnnouncement> worker = new SwingWorker<Void, ServerAnnouncement>() {
+            @Override
+            protected Void doInBackground() {
+                while (scanning[0]) {
+                    for (ServerAnnouncement a : scanServers(2000)) {
+                        publish(a);
+                    }
+                    try {
+                        Thread.sleep(400);
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            protected void process(List<ServerAnnouncement> chunks) {
+                String myIp = Server.getIpAddress();
+                for (ServerAnnouncement a : chunks) {
+                    if (a == null || a.getIp() == null || "127.0.0.1".equals(a.getIp())) continue;
+                    String label = a.toString();
+                    if (myIp != null && myIp.equals(a.getIp())) label = label + "  (本机)";
+                    if (seen.add(label)) {
+                        found.add(a);
+                        model.addElement(label);
+                    }
+                }
+            }
+        };
+
+        list.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    pickSelected.run();
+                }
+            }
+        });
+
+        btnConnect.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                pickSelected.run();
+            }
+        });
+
+        btnManual.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                scanning[0] = false;
+                dlg.dispose();
+                String manual = JOptionPane.showInputDialog(parent, "请输入服务器地址:");
+                if (manual != null && !manual.trim().isEmpty()) {
+                    if (onResult != null) onResult.accept(new ServerAnnouncement(manual.trim(), "", manual.trim()));
+                }
+            }
+        });
+
+        btnCancel.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                scanning[0] = false;
+                dlg.dispose();
+                if (onResult != null) onResult.accept(null);
+            }
+        });
+
+        dlg.setSize(340, 320);
+        dlg.setLocationRelativeTo(parent);
+        dlg.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        dlg.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                scanning[0] = false;
+            }
+        });
+        dlg.setVisible(true);
+
+        worker.execute();
     }
 
     /**
@@ -341,6 +449,7 @@ public class ClientChat {
         DatagramSocket socket = null;
         try {
             socket = new DatagramSocket(ServerAnnouncement.DISCOVERY_PORT);
+            socket.setReuseAddress(true);
             socket.setSoTimeout(800);
             byte[] buf = new byte[1024];
             long end = System.currentTimeMillis() + timeoutMs;
@@ -350,7 +459,8 @@ public class ClientChat {
                     socket.receive(p);
                     String s = new String(p.getData(), 0, p.getLength(), StandardCharsets.UTF_8);
                     ServerAnnouncement a = ServerAnnouncement.fromJson(s);
-                    if (a != null && a.getIp() != null && seen.add(a.getIp())) {
+                    //忽略本机回环通告（127.0.0.1），避免列表里出现自己
+                    if (a != null && a.getIp() != null && !"127.0.0.1".equals(a.getIp()) && seen.add(a.getIp())) {
                         list.add(a);
                     }
                 } catch (SocketTimeoutException e) {

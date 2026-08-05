@@ -2,176 +2,410 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>局域网连接</title>
     <link rel="stylesheet" href="./?getAssets=bootstrap.min.css">
     <script type="application/javascript" src="./?getAssets=jquary34.js"></script>
     <script type="application/javascript" src="./?getAssets=bootstrap.min.js"></script>
     <script>
+        var currentPath = null;
+
+        function iconFor(type) {
+            switch (type) {
+                case "folder":
+                    return "<svg viewBox='0 0 24 24' width='24' height='24' fill='#ffb300'><path d='M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
+                case "image":
+                    return "<svg viewBox='0 0 24 24' width='24' height='24' fill='#42a5f5'><path d='M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z'/></svg>";
+                case "video":
+                    return "<svg viewBox='0 0 24 24' width='24' height='24' fill='#ef5350'><path d='M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'/></svg>";
+                case "audio":
+                    return "<svg viewBox='0 0 24 24' width='24' height='24' fill='#66bb6a'><path d='M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z'/></svg>";
+                default:
+                    return "<svg viewBox='0 0 24 24' width='24' height='24' fill='#90a4ae'><path d='M6 2c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z'/></svg>";
+            }
+        }
+
+        function iconEl(type) {
+            let s = document.createElement("span");
+            s.className = "ic";
+            s.innerHTML = iconFor(type);
+            return s;
+        }
+
+        function previewUrl(path) {
+            return "?getjson=1&checkpass=replace_pass&preview=1&filepath=" + encodeURIComponent(path);
+        }
+        function downloadUrl(path) {
+            return "?getjson=1&checkpass=replace_pass&filepath=" + encodeURIComponent(path);
+        }
+
         function Get(url) {
-            let xmlhttprequest=new XMLHttpRequest();
-            let tt=new Date();
-            xmlhttprequest.open("GET",url+"&checkpass=replace_pass&time="+tt.getTime(),false);
+            let xmlhttprequest = new XMLHttpRequest();
+            let tt = new Date();
+            xmlhttprequest.open("GET", url + "&checkpass=replace_pass&time=" + tt.getTime(), false);
             xmlhttprequest.send(null);
             return xmlhttprequest.responseText;
         }
 
-        function getfile(filepath) {
-            window.open("?getjson=1&checkpass=replace_pass&filepath="+filepath);
+        function getfile(path) {
+            window.open(downloadUrl(path));
         }
-        function enter(filepath,filename) {
-            // https://stackoverflow.com/questions/2385113/howto-div-with-onclick-inside-another-div-with-onclick-javascript
-            if (!e) var e = window.event;
-            e.cancelBubble = true;
-            if (e.stopPropagation) e.stopPropagation();
 
-            document.getElementById("title_replace").innerHTML=decodeURI(filepath);
-            let isopen=document.getElementById(filepath).getAttribute("data-expend");
-            if (isopen=="opened"){
-                document.getElementById(filepath).setAttribute("class","col-12 card text-secondary");
-                document.getElementById(filepath).innerHTML=decodeURI(filename);
-                document.getElementById(filepath).setAttribute("data-expend","closed");
-            }else{
-                document.getElementById(filepath).setAttribute("class","col-12 card shadow-lg text-success");
+        function formatSize(b) {
+            b = b || 0;
+            if (b < 1024) return b + " B";
+            if (b < 1048576) return (b / 1024).toFixed(1) + " KB";
+            if (b < 1073741824) return (b / 1048576).toFixed(1) + " MB";
+            return (b / 1073741824).toFixed(1) + " GB";
+        }
 
-                let json_raw_data_folder=Get("./?getjson=1&filepath="+filepath);
-                let json_raw_data_file=Get("./?getjson=1&getjson_onlyfolder=1&filepath="+filepath);
-                fill_html(json_raw_data_folder,json_raw_data_file,filepath);
-                document.getElementById(filepath).setAttribute("data-expend","opened");
+        // ====== 左侧树状目录 ======
+        function depthOf(node) {
+            let d = 0, p = node.parentElement;
+            while (p) {
+                if (p.classList.contains("tree-node")) d++;
+                p = p.parentElement;
             }
-
-
+            return d;
         }
 
-        function fill_html(json_folder,json_file,element_id) {
-            let json_data_folder=JSON.parse(json_folder);
-            let json_data_file=JSON.parse(json_file);
+        function buildTreeNode(item, depth) {
+            let path = item.filepath;
+            let node = document.createElement("div");
+            node.className = "tree-node";
+            node.style.paddingLeft = (depth * 16 + 4) + "px";
+            node.dataset.path = path;
 
-            let fill_div=document.getElementById(element_id);
-            let fill_div_file=document.getElementById("div_replace_all");
-            let fill_string_folder="";
-            let fill_string_file="";
-            for(let i in json_data_folder){
-                // replace_string_folder+="<a href='./?filepath="+json_raw_data[i].filepath+"'>"+json_raw_data[i].filename+"</a><br>";
-                // console.log(json_raw_data[i].filepath);
-                if (json_data_folder[i].isFile){
-                    console.log(json_data_folder[i].filename);
-                    let filename=encodeURI(json_data_folder[i].filename);
-                    let filepath=encodeURI(json_data_folder[i].filepath);
-                    fill_string_folder+="<div class='col-3 card overflow-hidden m-1' onclick='getfile(\""+filepath+"\");'>" +
-                        "             "+json_data_folder[i].filename+
-                        "              </div>";
-                }else {
-                    let filename=encodeURI(json_data_folder[i].filename);
-                    let filepath=encodeURI(json_data_folder[i].filepath);
-                    fill_string_folder+="<div class='col-3 card overflow-hidden m-1' onclick='enter(\""+filepath+"\",\""+filename+"\");' id='"+filepath+"' >" +
-                        "             "+json_data_folder[i].filename+
-                        "              </div>";
+            let twisty = document.createElement("span");
+            twisty.className = "twisty";
+            twisty.textContent = "►";
+
+            let label = document.createElement("span");
+            label.className = "tree-label";
+            label.appendChild(iconEl("folder"));
+            let nm = document.createElement("span");
+            nm.className = "name";
+            nm.textContent = item.filename;
+            label.appendChild(nm);
+
+            let children = document.createElement("div");
+            children.className = "tree-children";
+            children.style.display = "none";
+
+            node.appendChild(twisty);
+            node.appendChild(label);
+            node.appendChild(children);
+
+            // 点击箭头和点击文件名，行为完全一致：展开子目录并加载右侧内容
+            twisty.addEventListener("click", function (e) {
+                e.stopPropagation();
+                activateNode(node);
+            });
+            label.addEventListener("click", function () {
+                activateNode(node);
+            });
+            return node;
+        }
+
+        function expandNode(node) {
+            let children = node.querySelector(":scope > .tree-children");
+            if (children) {
+                children.style.display = "block";
+                let tw = node.querySelector(":scope > .twisty");
+                if (tw) tw.textContent = "▼";
+            }
+        }
+
+        function loadChildrenInto(node, children, depth) {
+            let sub;
+            try {
+                sub = JSON.parse(Get("./?getjson=1&getjson_onlyfolder=1&filepath=" + encodeURIComponent(node.dataset.path)));
+            } catch (e) {
+                sub = [];
+            }
+            for (let it of sub) children.appendChild(buildTreeNode(it, depth));
+            children.dataset.loaded = "1";
+        }
+
+        function activateNode(node) {
+            let children = node.querySelector(":scope > .tree-children");
+            if (children && children.dataset.loaded !== "1") {
+                loadChildrenInto(node, children, depthOf(node) + 1);
+            }
+            expandNode(node);
+            selectFolder(node.dataset.path);
+        }
+
+        // 把绝对路径拆成从根到自身的各级祖先路径
+        function ancestorsOf(path) {
+            if (/^[A-Za-z]:[\\/]/.test(path)) { // Windows
+                let parts = path.split(/[\\/]+/).filter(s => s.length > 0);
+                let list = [];
+                let cur = parts[0] + "\\";
+                list.push(cur);
+                for (let i = 1; i < parts.length; i++) {
+                    cur = cur + parts[i];
+                    list.push(cur);
+                    cur = cur + "\\";
                 }
-
+                return list;
+            } else { // Unix / Android
+                let parts = path.split("/").filter(s => s.length > 0);
+                let list = [];
+                let cur = "/";
+                list.push(cur);
+                for (let i = 0; i < parts.length; i++) {
+                    cur = cur + parts[i];
+                    list.push(cur);
+                    cur = cur + "/";
+                }
+                return list;
             }
-            for(let i in json_data_file){
-
-                let filename=encodeURI(json_data_file[i].filename);
-                let filepath=encodeURI(json_data_file[i].filepath);
-
-                fill_string_file+="<div class='col-12 card overflow-hidden text-success' onclick='enter(\""+filepath+"\",\""+filename+"\");' id='"+filepath+"'>" +
-                    "             "+json_data_file[i].filename+
-                    "              </div>"
-
-
-            }
-            
-
-            fill_div.innerHTML+=fill_string_file;
-            fill_div_file.innerHTML=fill_string_folder;
-            //写反了..先反着用吧
-
         }
 
-        
-        function change_html(folder_json) {
-            let div_replace_folder=document.getElementById("div_replace_folder");
-            let div_replace_all=document.getElementById("div_replace_all");
-
-            let json_raw_data=JSON.parse(folder_json);
-            let replace_string_folder="";
-            let replace_string_file="";
-
-            for(let i=0;i<json_raw_data.length;i++){
-                let filename=encodeURI(json_raw_data[i].filename);
-                let filepath=encodeURI(json_raw_data[i].filepath);
-                // replace_string_folder+="<a href='./?filepath="+json_raw_data[i].filepath+"'>"+json_raw_data[i].filename+"</a><br>";
-                // console.log(json_raw_data[i].filepath);
-
-                replace_string_folder+="<div class='col-12 card text-success' onclick='enter(\""+filepath+"\",\""+filename+"\");' id='"+filepath+"' >" +
-                        "             "+json_raw_data[i].filename+
-                        "              </div>" 
-
-                replace_string_file+="<div class='col-3 card m-1' onclick='enter(\""+filepath+"\",\""+filename+"\");' id='"+filepath+"_file"+"'>" +
-                    "             "+json_raw_data[i].filename+
-                    "              </div>"
+        function findChildByPath(container, p) {
+            let kids = container.querySelectorAll(":scope > .tree-node");
+            for (let k of kids) {
+                if (k.dataset.path === p) return k;
             }
-            div_replace_all.innerHTML=replace_string_file;
-            div_replace_folder.innerHTML=replace_string_folder;
+            return null;
         }
 
-        function uploadFile(upload_path) {
-            document.getElementById(upload_path).setAttribute("class","dragUpload");
-            console.log(upload_path);
+        // 让目标路径在左侧树中展开可见（逐级懒加载父目录）
+        function revealInTree(path) {
+            let chain = ancestorsOf(path);
+            let topNodes = document.querySelectorAll("#div_tree > .tree-node");
+            let startNode = null;
+            for (let n of topNodes) {
+                let pp = n.dataset.path;
+                if (pp === path) { startNode = n; break; }
+                if (path.length > pp.length && path.indexOf(pp) === 0 &&
+                    (pp.endsWith("\\") || pp.endsWith("/") || path.charAt(pp.length) === "\\" || path.charAt(pp.length) === "/")) {
+                    startNode = n; break;
+                }
+            }
+            if (!startNode) return;
+            expandNode(startNode);
+            let node = startNode;
+            let covered = ancestorsOf(startNode.dataset.path).length; // 起始节点自身已覆盖的层级数
+            for (let i = covered; i < chain.length; i++) {
+                let children = node.querySelector(":scope > .tree-children");
+                if (!children) {
+                    children = document.createElement("div");
+                    children.className = "tree-children";
+                    node.appendChild(children);
+                }
+                if (children.dataset.loaded !== "1") {
+                    loadChildrenInto(node, children, depthOf(node) + 1);
+                }
+                let child = findChildByPath(children, chain[i]);
+                if (!child) break;
+                expandNode(child);
+                node = child;
+            }
+        }
+
+        function findNodeByPath(path) {
+            let nodes = document.querySelectorAll(".tree-node");
+            for (let n of nodes) {
+                if (n.dataset.path === path) return n;
+            }
+            return null;
+        }
+
+        function buildTree() {
+            let roots = JSON.parse(Get("./?getjson=1&getjson_onlyfolder=1"));
+            let tree = document.getElementById("div_tree");
+            tree.innerHTML = "";
+            for (let it of roots) tree.appendChild(buildTreeNode(it, 0));
+        }
+
+        // ====== 右侧文件网格 ======
+        function buildItem(item) {
+            let path = item.filepath;
+            let wrap = document.createElement("div");
+            wrap.className = "grid-item";
+
+            if (!item.isFile) {
+                wrap.classList.add("folder");
+                wrap.appendChild(iconEl("folder"));
+                let nm = document.createElement("div");
+                nm.className = "name";
+                nm.textContent = item.filename;
+                wrap.appendChild(nm);
+                let sz = document.createElement("div");
+                sz.className = "size";
+                sz.textContent = "";
+                wrap.appendChild(sz);
+                wrap.addEventListener("click", function () {
+                    selectFolder(path);
+                });
+            } else {
+                if (item.type === "image") {
+                    let a = document.createElement("a");
+                    a.href = "#";
+                    a.className = "thumb-wrap";
+                    let img = document.createElement("img");
+                    img.className = "thumb";
+                    img.loading = "lazy";
+                    img.src = previewUrl(path);
+                    a.appendChild(img);
+                    a.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        openLightbox(img.src);
+                    });
+                    wrap.appendChild(a);
+                } else if (item.type === "video") {
+                    let v = document.createElement("video");
+                    v.className = "thumb";
+                    v.preload = "metadata";
+                    v.controls = true;
+                    v.src = previewUrl(path);
+                    wrap.appendChild(v);
+                } else {
+                    wrap.appendChild(iconEl(item.type));
+                }
+                let nm = document.createElement("div");
+                nm.className = "name";
+                nm.textContent = item.filename;
+                wrap.appendChild(nm);
+                let sz = document.createElement("div");
+                sz.className = "size";
+                sz.textContent = formatSize(item.size);
+                wrap.appendChild(sz);
+                if (item.type !== "video") {
+                    let dl = document.createElement("a");
+                    dl.className = "dl";
+                    dl.href = "#";
+                    dl.textContent = "下载";
+                    dl.addEventListener("click", function (e) {
+                        e.preventDefault();
+                        getfile(path);
+                    });
+                    wrap.appendChild(dl);
+                }
+            }
+            return wrap;
+        }
+
+        function renderGrid(items) {
+            let grid = document.getElementById("div_grid");
+            grid.innerHTML = "";
+            for (let item of items) grid.appendChild(buildItem(item));
+        }
+
+        function loadContents(path) {
+            let url = path
+                ? ("./?getjson=1&filepath=" + encodeURIComponent(path))
+                : ("./?getjson=1");
+            let items = JSON.parse(Get(url));
+            renderGrid(items);
+            document.getElementById("title_replace").textContent = path ? path : "根目录";
+        }
+
+        function selectFolder(path) {
+            currentPath = path;
+            revealInTree(path);
+            let nodes = document.querySelectorAll(".tree-node");
+            for (let n of nodes) n.classList.remove("active");
+            let node = findNodeByPath(path);
+            if (node) node.classList.add("active");
+            loadContents(path);
+        }
+
+        // 图片灯箱预览
+        function openLightbox(src) {
+            document.getElementById("lightbox_img").src = src;
+            document.getElementById("lightbox").style.display = "flex";
+        }
+        function closeLightbox() {
+            document.getElementById("lightbox").style.display = "none";
+            document.getElementById("lightbox_img").src = "";
         }
 
         function f() {
-            let json_raw_data=Get("./?getjson=1");
-            change_html(json_raw_data);
-
+            buildTree();
+            loadContents(null);
         }
-
     </script>
     <style>
+        .card { transition: all .5s; }
+        .card:hover { box-shadow: 0 0 8px #0c5460; }
 
-        .card{
-            transition: all .5s;
+        /* 左侧树 */
+        #div_tree { max-height: 65vh; overflow: auto; }
+        .tree-node { user-select: none; line-height: 1.8; }
+        .tree-node.active > .tree-label { font-weight: bold; color: #0c5460; }
+        .twisty { cursor: pointer; display: inline-block; width: 16px; color: #888; font-size: 10px; }
+        .tree-label { cursor: pointer; display: inline-flex; align-items: center; }
+        .tree-label .ic { display: inline-flex; }
+        .tree-label .name { margin-left: 6px; }
+        .tree-children { margin-left: 0; }
+
+        /* 右侧网格：一行4个 */
+        #div_grid { display: flex; flex-wrap: wrap; }
+        .grid-item {
+            width: calc(25% - 16px);
+            margin: 8px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+            text-align: center;
+            cursor: default;
+            transition: all .2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-        .card:hover{
-            box-shadow: 0 0 8px #0c5460;
-            transition: all .5s;
+        .grid-item:hover { box-shadow: 0 0 8px #0c5460; }
+        .grid-item.folder { cursor: pointer; }
+        .grid-item .ic { display: inline-flex; }
+        .grid-item .name { font-size: 13px; margin-top: 6px; word-break: break-all; width: 100%; }
+        .grid-item .size { font-size: 12px; color: #999; margin-top: 2px; }
+        .grid-item .dl { font-size: 12px; color: #0c5460; margin-top: 4px; }
+        .thumb { width: 100%; height: 120px; object-fit: cover; border-radius: 4px; background: #0001; }
+        .thumb-wrap { display: block; }
+
+        @media (max-width: 768px) {
+            .grid-item { width: calc(50% - 16px); }
         }
-        .dragUpload{
-            border: solid 2px #1c7430;
-        }
+
+        #lightbox { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 9999; align-items: center; justify-content: center; }
+        #lightbox img { max-width: 92%; max-height: 92%; border-radius: 6px; }
+        #lightbox:after { content: "✕"; position: absolute; top: 16px; right: 22px; color: #fff; font-size: 28px; cursor: pointer; }
     </style>
 </head>
-<body onload="f();">
-    <div class="container">
-        <br>
-        <div class="card shadow">
-            <div class="card-body">
-                <h3 class="card-title">局域网分享</h3>
-                <hr>
-                <div class="row">
-                    <div class="col-md-5">
-                        <p class="text-secondary">文件夹列表</p>
-                        <div class="card shadow-sm">
-                            <div class="card-body overflow-auto" id="div_replace_folder">
-                                replace_folder
-                            </div>
-                        </div>
+<body onload="f();" onclick="if(event.target.id==='lightbox')closeLightbox();">
+<div class="container">
+    <br>
+    <div class="card shadow">
+        <div class="card-body">
+            <h3 class="card-title">局域网分享</h3>
+            <hr>
+            <div class="row">
+                <div class="col-md-4">
+                    <p class="text-secondary">文件夹</p>
+                    <div class="card shadow-sm">
+                        <div class="card-body" id="div_tree"></div>
                     </div>
-                    <div class="col-md-7">
-                        <p class="text-secondary" id="title_replace">详细</p>
-                        <div class="card shadow-sm">
-                            <div class="card-body overflow-auto">
-                                <div class="row" id="div_replace_all">
-                                    replace_all
-                                </div>
-                            </div>
+                </div>
+                <div class="col-md-8">
+                    <p class="text-secondary" id="title_replace">根目录</p>
+                    <div class="card shadow-sm">
+                        <div class="card-body" style="max-height:65vh; overflow:auto;">
+                            <div id="div_grid"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <p class="text-secondary text-center font-italic">Powered By 兰兰想</p>
     </div>
+    <p class="text-secondary text-center font-italic">Powered By 兰兰想</p>
+</div>
+
+<div id="lightbox" onclick="closeLightbox();">
+    <img id="lightbox_img" src="" alt="preview">
+</div>
 
 </body>
 </html>

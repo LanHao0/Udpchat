@@ -52,10 +52,9 @@ public class App extends NanoHTTPD {
         Map<String, String> parms = session.getParms();
         String msg = "";
         if (parms.get("getAssets")!=null){
-            msg=new MyFile().getResString(parms.get("getAssets"));
-//            String mime= URLConnection.guessContentTypeFromName(new MyFile().getResFile(parms.get("getAssets")).getName());
-            //todo mime 有bug先一律返回css
-            return newFixedLengthResponse(Response.Status.OK,"text/css",msg);
+            String asset=parms.get("getAssets");
+            msg=new MyFile().getResString(asset);
+            return newFixedLengthResponse(Response.Status.OK, mimeFor(asset), msg);
         }
 
         if (parms.get("checkpass")!=null) {
@@ -83,11 +82,17 @@ public class App extends NanoHTTPD {
                     try {
                         fis = new FileInputStream(file);
                         MIME_TYPE= URLConnection.guessContentTypeFromName(file.getName());
+                        if (MIME_TYPE==null) MIME_TYPE = mimeFor(file.getName());
                         response = newFixedLengthResponse(Response.Status.OK,MIME_TYPE,fis,fis.getChannel().size());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    response.addHeader("Content-Disposition:","attachment; filename=\""+  URLEncoder.encode(file.getName())+"\"");
+                    // 预览模式：浏览器内联显示（图片/视频），不强制下载
+                    if (parms.get("preview")!=null){
+                        response.addHeader("Content-Disposition","inline; filename=\""+  URLEncoder.encode(file.getName())+"\"");
+                    }else{
+                        response.addHeader("Content-Disposition","attachment; filename=\""+  URLEncoder.encode(file.getName())+"\"");
+                    }
 
                     return response;
                 }
@@ -107,5 +112,27 @@ public class App extends NanoHTTPD {
         msg=new MyFile().getResString("index.html");
         msg=msg.replace("replace_pass",webpassword);
         return newFixedLengthResponse(msg);
+    }
+
+    private String mimeFor(String name){
+        int i = name.lastIndexOf('.');
+        String ext = (i >= 0) ? name.substring(i+1).toLowerCase() : "";
+        switch (ext){
+            case "css": return "text/css";
+            case "js": return "application/javascript";
+            case "html": case "htm": return "text/html";
+            case "json": return "application/json";
+            case "png": return "image/png";
+            case "jpg": case "jpeg": return "image/jpeg";
+            case "gif": return "image/gif";
+            case "webp": return "image/webp";
+            case "svg": return "image/svg+xml";
+            case "mp4": return "video/mp4";
+            case "webm": return "video/webm";
+            case "ogg": return "video/ogg";
+            case "mp3": return "audio/mpeg";
+            case "wav": return "audio/wav";
+            default: return "application/octet-stream";
+        }
     }
 }

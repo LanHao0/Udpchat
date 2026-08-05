@@ -11,11 +11,17 @@ public class MyEveryFileProperties {
     private String filepath;
     private String filename;
     private Boolean isFile;
+    private String ext;
+    private String type;
+    private long size;
 
-    public MyEveryFileProperties(String filepath, String filename,Boolean isFile) {
+    public MyEveryFileProperties(String filepath, String filename, Boolean isFile, String ext, String type, long size) {
         this.filepath = filepath;
         this.filename = filename;
         this.isFile = isFile;
+        this.ext = ext;
+        this.type = type;
+        this.size = size;
     }
 
 }

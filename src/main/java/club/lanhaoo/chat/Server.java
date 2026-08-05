@@ -33,14 +33,17 @@ public class Server {
             ConcurrentHashMap.newKeySet();
 
     public static void main(String[] args) throws Exception {
-        //可能抛出异常 加上抛出异常
-
-        //服务端其实就是所有消息的接收端！接收到消息打印到聊天室房间
-
-        System.out.println("开始服务端");
         String nickname = (args != null && args.length > 0 && args[0] != null && !args[0].trim().isEmpty())
                 ? args[0].trim()
                 : defaultNickname();
+        startServer(nickname);
+    }
+
+    /**
+     * 启动服务器核心逻辑。独立进程( main )与客户端“开启服务器”按钮（后台线程）共用。
+     */
+    public static void startServer(String nickname) throws Exception {
+        System.out.println("开始服务端");
         System.out.println("服务器昵称: " + nickname + " (发现端口 " + ServerAnnouncement.DISCOVERY_PORT + ")");
         startDiscoveryBroadcast(nickname);
 
@@ -240,6 +243,8 @@ public class Server {
 
     /**
      * 持续广播服务器存在通告，方便客户端自动扫描发现。
+     * 遍历本机所有 IPv4 接口，按各自的子网掩码广播到正确广播地址，
+     * 从而覆盖 192.168 / 10 / 172 等任意子网，而不局限于首个网卡的 192.168.x.255。
      * 通告格式(JSON): {"ip":"...","version":"...","nickname":"..."}
      */
     private static void startDiscoveryBroadcast(final String nickname) {
@@ -247,27 +252,37 @@ public class Server {
             try {
                 DatagramSocket sock = new DatagramSocket();
                 sock.setBroadcast(true);
-                String ip = getIpAddress();
-                String broadcast = broadcastAddress(ip);
-                ServerAnnouncement ann = new ServerAnnouncement(ip, VERSION, nickname);
-                byte[] data = ann.toJson().getBytes(StandardCharsets.UTF_8);
                 while (true) {
-                    //子网广播
-                    if (broadcast != null) {
-                        try {
-                            sock.send(new DatagramPacket(data, data.length,
-                                    InetAddress.getByName(broadcast), ServerAnnouncement.DISCOVERY_PORT));
-                        } catch (Exception ignore) {
+                    //在所有本地 IPv4 接口上，按各自的真实广播地址发送
+                    try {
+                        for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
+                            NetworkInterface intf = en.nextElement();
+                            if (intf.isLoopback() || !intf.isUp()) continue;
+                            for (InterfaceAddress ia : intf.getInterfaceAddresses()) {
+                                InetAddress addr = ia.getAddress();
+                                InetAddress bc = broadcastOf(ia);
+                                if (!(addr instanceof Inet4Address) || bc == null) continue;
+                                //通告里带上该接口自身的 IP，客户端才能连回正确的子网地址
+                                ServerAnnouncement ann = new ServerAnnouncement(addr.getHostAddress(), VERSION, nickname);
+                                byte[] data = ann.toJson().getBytes(StandardCharsets.UTF_8);
+                                try {
+                                    sock.send(new DatagramPacket(data, data.length, bc, ServerAnnouncement.DISCOVERY_PORT));
+                                } catch (Exception ignore) {
+                                }
+                            }
                         }
+                    } catch (Exception ignore) {
                     }
                     //回环地址：同机客户端也能被发现
                     try {
+                        ServerAnnouncement ann = new ServerAnnouncement("127.0.0.1", VERSION, nickname);
+                        byte[] data = ann.toJson().getBytes(StandardCharsets.UTF_8);
                         sock.send(new DatagramPacket(data, data.length,
                                 InetAddress.getByName("127.0.0.1"), ServerAnnouncement.DISCOVERY_PORT));
                     } catch (Exception ignore) {
                     }
                     try {
-                        Thread.sleep(3000);
+                        Thread.sleep(300);
                     } catch (InterruptedException e) {
                         break;
                     }
@@ -278,22 +293,35 @@ public class Server {
         }, "ServerDiscovery").start();
     }
 
-    //由本机IP推导子网广播地址（末位改为255）
-    private static String broadcastAddress(String ip) {
-        if (ip == null) return null;
-        String[] parts = ip.split("\\.");
-        if (parts.length != 4) return null;
-        parts[3] = "255";
-        return parts[0] + "." + parts[1] + "." + parts[2] + "." + parts[3];
-    }
-
-    private static String defaultNickname() {
+    static String defaultNickname() {
         try {
             String h = InetAddress.getLocalHost().getHostName();
             if (h != null && !h.trim().isEmpty()) return h;
         } catch (Exception ignore) {
         }
         return "Server";
+    }
+
+    //计算接口的真实广播地址：优先用系统给出的 getBroadcast()，
+    //若其为 null（部分 WiFi/网卡配置会返回 null），则按地址+前缀长度推导。
+    private static InetAddress broadcastOf(InterfaceAddress ia) {
+        InetAddress bc = ia.getBroadcast();
+        if (bc != null) return bc;
+        if (!(ia.getAddress() instanceof Inet4Address)) return null;
+        try {
+            byte[] addr = ia.getAddress().getAddress();
+            int a = ((addr[0] & 0xFF) << 24) | ((addr[1] & 0xFF) << 16)
+                    | ((addr[2] & 0xFF) << 8) | (addr[3] & 0xFF);
+            int prefix = ia.getNetworkPrefixLength();
+            int mask = (prefix <= 0 || prefix >= 32)
+                    ? (prefix == 0 ? 0 : 0xFFFFFFFF)
+                    : (0xFFFFFFFF << (32 - prefix));
+            int bcast = a | (~mask);
+            byte[] b = { (byte) (bcast >>> 24), (byte) (bcast >>> 16), (byte) (bcast >>> 8), (byte) bcast };
+            return InetAddress.getByAddress(b);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     //这段代码来自https://stackoverflow.com/questions/17252018/getting-my-lan-ip-address-192-168-xxxx-ipv4，强转了两句的变量类型，适用于这里
