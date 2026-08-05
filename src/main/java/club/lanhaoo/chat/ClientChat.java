@@ -279,6 +279,73 @@ public class ClientChat {
         new Thread(cCRT).start();
 
 
+        // ====== 自动滚动 + “N条新消息”按钮 ======
+        // userScrolledUp: 用户是否把滚动条拉离了底部（在看历史消息）
+        // programmaticScroll: 标记程序触发的滚动，避免被误判为用户操作
+        final boolean[] userScrolledUp = {false};
+        final int[] newMsgCount = {0};
+        final boolean[] programmaticScroll = {false};
+
+        final JButton newMsgBtn = new JButton("0 条新消息");
+        newMsgBtn.setVisible(false);
+        frame.getLayeredPane().add(newMsgBtn, JLayeredPane.POPUP_LAYER);
+
+        Runnable positionNewMsgBtn = () -> {
+            int w = newMsgBtn.getPreferredSize().width;
+            int h = newMsgBtn.getPreferredSize().height;
+            if (w <= 0 || h <= 0) return;
+            newMsgBtn.setBounds(frame.getWidth() - w - 24, frame.getHeight() - h - 24, w, h);
+        };
+        Runnable scrollToBottom = () -> {
+            programmaticScroll[0] = true;
+            jScrollBar_chat.setValue(jScrollBar_chat.getMaximum());
+            programmaticScroll[0] = false;
+            userScrolledUp[0] = false;
+            newMsgCount[0] = 0;
+            newMsgBtn.setVisible(false);
+        };
+        Runnable showNewMsgBtn = () -> {
+            newMsgCount[0]++;
+            newMsgBtn.setText(newMsgCount[0] + " 条新消息");
+            positionNewMsgBtn.run();
+            newMsgBtn.setVisible(true);
+        };
+
+        newMsgBtn.addActionListener(e -> scrollToBottom.run());
+
+        jScrollBar_chat.addAdjustmentListener(e -> {
+            if (programmaticScroll[0]) return; // 忽略程序触发的滚动
+            int max = jScrollBar_chat.getMaximum() - jScrollBar_chat.getVisibleAmount();
+            boolean atBottom = jScrollBar_chat.getValue() >= max - 4;
+            if (atBottom) {
+                userScrolledUp[0] = false;
+                newMsgCount[0] = 0;
+                newMsgBtn.setVisible(false);
+            } else {
+                userScrolledUp[0] = true;
+            }
+        });
+
+        ((DefaultListModel) listModel_message).addListDataListener(new javax.swing.event.ListDataListener() {
+            public void intervalAdded(javax.swing.event.ListDataEvent e) { onNewMessage(); }
+            public void intervalRemoved(javax.swing.event.ListDataEvent e) { }
+            public void contentsChanged(javax.swing.event.ListDataEvent e) { }
+            private void onNewMessage() {
+                if (userScrolledUp[0]) {
+                    SwingUtilities.invokeLater(showNewMsgBtn);
+                } else {
+                    SwingUtilities.invokeLater(scrollToBottom);
+                }
+            }
+        });
+
+        frame.addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentResized(java.awt.event.ComponentEvent e) { positionNewMsgBtn.run(); }
+        });
+        SwingUtilities.invokeLater(positionNewMsgBtn);
+        SwingUtilities.invokeLater(scrollToBottom);
+
+
     }
 
     /**
@@ -300,22 +367,25 @@ public class ClientChat {
 
     private static void SendMessage(JTextArea jTextArea_message, UserSettings userSettings, ListModel listModel_message) {
         String pure_message = jTextArea_message.getText();
+        if (pure_message == null || pure_message.trim().isEmpty()) {
+            return;
+        }
 
         Message message = new Message("text", "", pure_message);
         message.setFromIp(Server.getIpAddress());
 
-        SwingUtilities.invokeLater(() -> {
+        // 点击发送后立即清空输入框（在 EDT 上），发送放到后台线程，
+        // 避免 message.send 等待 ACK 时阻塞界面
+        jTextArea_message.setText("");
 
-            if (message.send(userSettings)) {
-                jTextArea_message.grabFocus();
-                jTextArea_message.setText("");
-            } else {
-                ((DefaultListModel) listModel_message).addElement(new Message("local", "", "发送失败"));
+        new Thread(() -> {
+            boolean ok = message.send(userSettings);
+            if (!ok) {
+                SwingUtilities.invokeLater(() -> {
+                    ((DefaultListModel) listModel_message).addElement(new Message("local", "", "发送失败"));
+                });
             }
-
-        });
-
-
+        }, "SendMessage").start();
 
     }
 

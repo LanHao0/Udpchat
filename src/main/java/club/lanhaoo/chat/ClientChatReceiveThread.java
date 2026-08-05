@@ -70,6 +70,11 @@ public class ClientChatReceiveThread implements Runnable {
 
                 }
 
+                //JOIN 等控制消息不显示（避免空白处/在线列表出现 null）
+                if("JOIN".equals(message.getType())){
+                    continue;
+                }
+
                 String messageId = message.getMessageId();
 
                 Message ack =
@@ -103,20 +108,19 @@ public class ClientChatReceiveThread implements Runnable {
 
                 SwingUtilities.invokeLater(() -> {
 
-                    if (!arrayList.contains(message.getFromIp())) {
+                    if (message.getFromIp() != null
+                            && !arrayList.contains(message.getFromIp())) {
                         arrayList.add(message.getFromIp());
                         ((DefaultListModel) listModel).addElement(message.getFromIp());
                     }
 
-                    ((DefaultListModel) listModel_message).addElement(message);
-
-                    jScrollBar.setValue(jScrollBar.getMaximum());
+                    //只显示有内容的聊天消息（过滤控制/空白报文）
+                    if (message.getContent() != null
+                            && !message.getContent().isEmpty()) {
+                        ((DefaultListModel) listModel_message).addElement(message);
+                    }
 
                 });
-
-                //自动下滚
-                jScrollBar.validate();
-                jScrollBar.setValue(jScrollBar.getMaximum());
 
             }
         } catch (IOException e) {

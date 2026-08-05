@@ -10,19 +10,22 @@
     <script>
         var currentPath = null;
         var RECENT_KEY = "udpchat_recent_folders"; // 最近访问文件夹（最多10个）
+        var copiedPath = null;                      // 右键“复制”的文件路径
+        var ctxPath = null;
+        var ctxIsFile = true;
 
         function iconFor(type) {
             switch (type) {
                 case "folder":
-                    return "<svg viewBox='0 0 24 24' width='24' height='24' fill='#ffb300'><path d='M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
+                    return "<svg viewBox='0 0 24 24' width='40' height='40' fill='#ffb300'><path d='M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/></svg>";
                 case "image":
-                    return "<svg viewBox='0 0 24 24' width='24' height='24' fill='#42a5f5'><path d='M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z'/></svg>";
+                    return "<svg viewBox='0 0 24 24' width='40' height='40' fill='#42a5f5'><path d='M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z'/></svg>";
                 case "video":
-                    return "<svg viewBox='0 0 24 24' width='24' height='24' fill='#ef5350'><path d='M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'/></svg>";
+                    return "<svg viewBox='0 0 24 24' width='40' height='40' fill='#ef5350'><path d='M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'/></svg>";
                 case "audio":
-                    return "<svg viewBox='0 0 24 24' width='24' height='24' fill='#66bb6a'><path d='M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z'/></svg>";
+                    return "<svg viewBox='0 0 24 24' width='40' height='40' fill='#66bb6a'><path d='M12 3v9.28c-.47-.17-.97-.28-1.5-.28C8.01 12 6 14.01 6 16.5S8.01 21 10.5 21c2.31 0 4.2-1.75 4.45-4H15V6h4V3h-7z'/></svg>";
                 default:
-                    return "<svg viewBox='0 0 24 24' width='24' height='24' fill='#90a4ae'><path d='M6 2c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z'/></svg>";
+                    return "<svg viewBox='0 0 24 24' width='40' height='40' fill='#90a4ae'><path d='M6 2c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6H6zm7 7V3.5L18.5 9H13z'/></svg>";
             }
         }
 
@@ -78,9 +81,14 @@
         function addRecent(path) {
             if (!path) return;
             let arr = loadRecents();
-            arr = arr.filter(p => p !== path); // 去重
+            arr = arr.filter(p => p !== path);
             arr.unshift(path);
             if (arr.length > 10) arr = arr.slice(0, 10);
+            saveRecents(arr);
+            renderRecents();
+        }
+        function removeRecent(path) {
+            let arr = loadRecents().filter(p => p !== path);
             saveRecents(arr);
             renderRecents();
         }
@@ -120,16 +128,7 @@
             }
         }
         function gotoRecent(path) {
-            showTab("tree");
             selectFolder(path);
-        }
-
-        // ====== 标签切换：快捷方式 / 文件树 ======
-        function showTab(name) {
-            let tabs = document.querySelectorAll("#treeTabs .nav-link");
-            for (let t of tabs) t.classList.toggle("active", t.dataset.tab === name);
-            document.getElementById("panel_quick").style.display = (name === "quick") ? "block" : "none";
-            document.getElementById("panel_tree").style.display = (name === "tree") ? "block" : "none";
         }
 
         // ====== 左侧树状目录 ======
@@ -169,12 +168,10 @@
             node.appendChild(label);
             node.appendChild(children);
 
-            // 点击箭头：展开/折叠切换
             twisty.addEventListener("click", function (e) {
                 e.stopPropagation();
                 toggleNode(node);
             });
-            // 点击文件名：展开并加载右侧内容
             label.addEventListener("click", function () {
                 let c = node.querySelector(":scope > .tree-children");
                 if (c && c.dataset.loaded !== "1") {
@@ -183,6 +180,7 @@
                 expandNode(node);
                 selectFolder(node.dataset.path);
             });
+
             return node;
         }
 
@@ -228,9 +226,8 @@
             children.dataset.loaded = "1";
         }
 
-        // 把绝对路径拆成从根到自身的各级祖先路径
         function ancestorsOf(path) {
-            if (/^[A-Za-z]:[\\/]/.test(path)) { // Windows
+            if (/^[A-Za-z]:[\\/]/.test(path)) {
                 let parts = path.split(/[\\/]+/).filter(s => s.length > 0);
                 let list = [];
                 let cur = parts[0] + "\\";
@@ -241,7 +238,7 @@
                     cur = cur + "\\";
                 }
                 return list;
-            } else { // Unix / Android
+            } else {
                 let parts = path.split("/").filter(s => s.length > 0);
                 let list = [];
                 let cur = "/";
@@ -263,7 +260,6 @@
             return null;
         }
 
-        // 让目标路径在左侧树中展开可见（逐级懒加载父目录）
         function revealInTree(path) {
             let chain = ancestorsOf(path);
             let topNodes = document.querySelectorAll("#div_tree > .tree-node");
@@ -279,7 +275,7 @@
             if (!startNode) return;
             expandNode(startNode);
             let node = startNode;
-            let covered = ancestorsOf(startNode.dataset.path).length; // 起始节点自身已覆盖的层级数
+            let covered = ancestorsOf(startNode.dataset.path).length;
             for (let i = covered; i < chain.length; i++) {
                 let children = node.querySelector(":scope > .tree-children");
                 if (!children) {
@@ -317,66 +313,134 @@
             let path = item.filepath;
             let wrap = document.createElement("div");
             wrap.className = "grid-item";
+            wrap.dataset.path = path;
+            wrap._item = item;
+            wrap.draggable = true;
+            wrap.addEventListener("dragstart", function (e) {
+                e.dataTransfer.setData("text/plain", path);
+                e.dataTransfer.effectAllowed = "move";
+            });
 
             if (!item.isFile) {
                 wrap.classList.add("folder");
-                wrap.appendChild(iconEl("folder"));
+                let tw = document.createElement("div");
+                tw.className = "thumb-wrap";
+                tw.appendChild(iconEl("folder"));
                 let nm = document.createElement("div");
                 nm.className = "name";
                 nm.textContent = item.filename;
+                let meta = document.createElement("div");
+                meta.className = "meta";
+                let act = document.createElement("div");
+                act.className = "actions";
+                act.innerHTML = "<span class='dl'>打开</span>";
+                wrap.appendChild(tw);
                 wrap.appendChild(nm);
-                let sz = document.createElement("div");
-                sz.className = "size";
-                sz.textContent = "";
-                wrap.appendChild(sz);
-                wrap.addEventListener("click", function () {
-                    selectFolder(path);
-                });
-            } else {
-                if (item.type === "image") {
-                    let a = document.createElement("a");
-                    a.href = "#";
-                    a.className = "thumb-wrap";
-                    let img = document.createElement("img");
-                    img.className = "thumb";
-                    img.loading = "lazy";
-                    img.src = previewUrl(path);
-                    a.appendChild(img);
-                    a.addEventListener("click", function (e) {
-                        e.preventDefault();
-                        openLightbox(img.src);
-                    });
-                    wrap.appendChild(a);
-                } else if (item.type === "video") {
-                    let v = document.createElement("video");
-                    v.className = "thumb";
-                    v.preload = "metadata";
-                    v.controls = true;
-                    v.src = previewUrl(path);
-                    wrap.appendChild(v);
-                } else {
-                    wrap.appendChild(iconEl(item.type));
-                }
-                let nm = document.createElement("div");
-                nm.className = "name";
-                nm.textContent = item.filename;
-                wrap.appendChild(nm);
-                let sz = document.createElement("div");
-                sz.className = "size";
-                sz.textContent = formatSize(item.size);
-                wrap.appendChild(sz);
-                if (item.type !== "video") {
-                    let dl = document.createElement("a");
-                    dl.className = "dl";
-                    dl.href = "#";
-                    dl.textContent = "下载";
-                    dl.addEventListener("click", function (e) {
-                        e.preventDefault();
-                        getfile(path);
-                    });
-                    wrap.appendChild(dl);
-                }
+                wrap.appendChild(meta);
+                wrap.appendChild(act);
+                wrap.addEventListener("click", function () { selectFolder(path); });
+                return wrap;
             }
+
+            let media;
+            if (item.type === "image") {
+                media = document.createElement("a");
+                media.href = "#";
+                media.className = "thumb-wrap";
+                let img = document.createElement("img");
+                img.className = "thumb";
+                img.loading = "lazy";
+                img.src = previewUrl(path);
+                media.appendChild(img);
+                media.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    openLightbox(img.src);
+                });
+            } else if (item.type === "video") {
+                media = document.createElement("video");
+                media.className = "thumb";
+                media.preload = "metadata";
+                media.controls = true;
+                media.src = previewUrl(path);
+            } else if (item.type === "audio") {
+                media = document.createElement("audio");
+                media.className = "audio-player";
+                media.controls = true;
+                media.src = previewUrl(path);
+            } else {
+                media = document.createElement("div");
+                media.className = "thumb-wrap";
+                media.appendChild(iconEl(item.type));
+            }
+
+            let nm = document.createElement("div");
+            nm.className = "name";
+            nm.textContent = item.filename;
+            let meta = document.createElement("div");
+            meta.className = "meta";
+            meta.textContent = formatSize(item.size);
+            let act = document.createElement("div");
+            act.className = "actions";
+            if (item.type === "image") {
+                let view = document.createElement("a");
+                view.className = "dl";
+                view.href = "#";
+                view.textContent = "查看";
+                view.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    openLightbox(previewUrl(path));
+                });
+                let sep = document.createElement("span");
+                sep.textContent = " ";
+                let dl = document.createElement("a");
+                dl.className = "dl";
+                dl.href = "#";
+                dl.textContent = "下载";
+                dl.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    getfile(path);
+                });
+                act.appendChild(view);
+                act.appendChild(sep);
+                act.appendChild(dl);
+            } else if (item.type === "video") {
+                let view = document.createElement("a");
+                view.className = "dl";
+                view.href = "#";
+                view.textContent = "查看";
+                view.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    openLightbox(previewUrl(path), true);
+                });
+                let sep = document.createElement("span");
+                sep.textContent = " ";
+                let dl = document.createElement("a");
+                dl.className = "dl";
+                dl.href = "#";
+                dl.textContent = "下载";
+                dl.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    getfile(path);
+                });
+                act.appendChild(view);
+                act.appendChild(sep);
+                act.appendChild(dl);
+            } else {
+                let dl = document.createElement("a");
+                dl.className = "dl";
+                dl.href = "#";
+                dl.textContent = "下载";
+                dl.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    getfile(path);
+                });
+                act.appendChild(dl);
+            }
+
+            wrap.appendChild(media);
+            wrap.appendChild(nm);
+            wrap.appendChild(meta);
+            wrap.appendChild(act);
             return wrap;
         }
 
@@ -396,7 +460,7 @@
         }
 
         function selectFolder(path) {
-            if (path) addRecent(path); // 记录最近访问，用于快捷方式
+            if (path) addRecent(path);
             currentPath = path;
             revealInTree(path);
             let nodes = document.querySelectorAll(".tree-node");
@@ -406,79 +470,326 @@
             loadContents(path);
         }
 
-        // 图片灯箱预览
-        function openLightbox(src) {
-            document.getElementById("lightbox_img").src = src;
+        // 灯箱预览：图片或视频大屏查看
+        function openLightbox(src, isVideo) {
+            let img = document.getElementById("lightbox_img");
+            let vid = document.getElementById("lightbox_video");
+            if (isVideo) {
+                img.style.display = "none";
+                vid.style.display = "block";
+                vid.src = src;
+                vid.play().catch(function () {});
+            } else {
+                if (vid) { vid.pause(); vid.removeAttribute("src"); vid.style.display = "none"; }
+                img.style.display = "block";
+                img.src = src;
+            }
             document.getElementById("lightbox").style.display = "flex";
         }
         function closeLightbox() {
             document.getElementById("lightbox").style.display = "none";
-            document.getElementById("lightbox_img").src = "";
+            let vid = document.getElementById("lightbox_video");
+            if (vid) { vid.pause(); vid.removeAttribute("src"); vid.style.display = "none"; }
+            let img = document.getElementById("lightbox_img");
+            img.src = "";
+            img.style.display = "block";
+        }
+
+        // ====== 上传 / 拖拽上传 ======
+        function uploadFiles(fileList, targetDir) {
+            let dir = targetDir || "";
+            let pending = fileList.length;
+            if (pending === 0) return;
+            for (let f of fileList) {
+                let url = "./?upload=1&checkpass=replace_pass&filepath=" + encodeURIComponent(dir)
+                        + "&filename=" + encodeURIComponent(f.name);
+                fetch(url, { method: "POST", body: f })
+                    .then(resp => resp.text())
+                    .then(t => {
+                        if (t !== "OK") alert("上传失败: " + t);
+                        pending--;
+                        if (pending === 0) afterUpload(dir);
+                    })
+                    .catch(e => {
+                        alert("上传失败");
+                        pending--;
+                        if (pending === 0) afterUpload(dir);
+                    });
+            }
+        }
+        function afterUpload(target) {
+            if (target && target !== currentPath) selectFolder(target);
+            else loadContents(currentPath);
+        }
+
+        // ====== 右键菜单：删除 / 复制 / 粘贴（全网页生效）======
+        var ctxItem = null;
+        function showCtxMenu(x, y) {
+            let menu = document.getElementById("ctxMenu");
+            menu.style.display = "block";
+            // 视口内夹紧，避免溢出
+            let px = Math.min(x, window.innerWidth - 160);
+            let py = Math.min(y, window.innerHeight - 120);
+            menu.style.left = px + "px";
+            menu.style.top = py + "px";
+            document.getElementById("ctx_delete").style.display = (ctxItem ? "block" : "none");
+            document.getElementById("ctx_copy").style.display = (ctxItem ? "block" : "none");
+            document.getElementById("ctx_paste").style.display = (copiedPath ? "block" : "none");
+        }
+        function hideCtx() {
+            document.getElementById("ctxMenu").style.display = "none";
+        }
+        // 整个网页拦截原生右键菜单，弹出自定义菜单（空区域只显示“粘贴”）
+        document.addEventListener("contextmenu", function (e) {
+            e.preventDefault();
+            let itemEl = e.target.closest(".grid-item");
+            if (itemEl && itemEl._item) {
+                ctxItem = itemEl._item;
+                ctxPath = ctxItem.filepath;
+                ctxIsFile = ctxItem.isFile;
+            } else {
+                ctxItem = null;
+                ctxPath = null;
+                ctxIsFile = true;
+            }
+            showCtxMenu(e.clientX, e.clientY);
+        });
+        function deleteFile(p) {
+            if (!confirm("确定删除该文件/文件夹？此操作不可恢复。")) return;
+            let url = "./?delete=1&checkpass=replace_pass&filepath=" + encodeURIComponent(p);
+            fetch(url, { method: "POST" })
+                .then(r => r.text())
+                .then(t => {
+                    if (t !== "OK") alert("删除失败: " + t);
+                    removeRecent(p);
+                    if (currentPath && p === currentPath) loadContents(null);
+                    else loadContents(currentPath);
+                })
+                .catch(e => alert("删除失败"));
+        }
+        function copyFile(from, toDir) {
+            let url = "./?copy=1&checkpass=replace_pass&from=" + encodeURIComponent(from)
+                    + "&to=" + encodeURIComponent(toDir);
+            fetch(url, { method: "POST" })
+                .then(r => r.text())
+                .then(t => {
+                    if (t !== "OK") alert("粘贴失败: " + t);
+                    loadContents(currentPath);
+                })
+                .catch(e => alert("粘贴失败"));
+        }
+        function moveFile(from, toDir) {
+            let url = "./?move=1&checkpass=replace_pass&from=" + encodeURIComponent(from)
+                    + "&to=" + encodeURIComponent(toDir);
+            fetch(url, { method: "POST" })
+                .then(r => r.text())
+                .then(t => {
+                    if (t !== "OK") alert("移动失败: " + t);
+                    loadContents(currentPath);
+                })
+                .catch(e => alert("移动失败"));
+        }
+        // 拖到左侧树文件夹：OS文件→上传，应用内文件→移动
+        function handleDropOnFolder(targetPath, e) {
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                uploadFiles(e.dataTransfer.files, targetPath);
+            } else {
+                let from = e.dataTransfer.getData("text/plain");
+                if (from) moveFile(from, targetPath);
+            }
+        }
+
+        // ====== 拖拽高亮 / 落点判定 ======
+        let dragTarget = null;
+        function clearDragHighlight() {
+            if (dragTarget) {
+                dragTarget.classList.remove("drop-hover");
+                dragTarget = null;
+            }
+        }
+        function initDragDrop() {
+            let grid = document.getElementById("div_grid");
+            grid.addEventListener("dragover", function (e) {
+                e.preventDefault();
+                let folderEl = e.target.closest(".grid-item.folder");
+                if (folderEl !== dragTarget) {
+                    clearDragHighlight();
+                    dragTarget = folderEl;
+                    if (dragTarget) dragTarget.classList.add("drop-hover");
+                }
+            });
+            grid.addEventListener("dragleave", function (e) {
+                if (!grid.contains(e.relatedTarget)) clearDragHighlight();
+            });
+            grid.addEventListener("drop", function (e) {
+                e.preventDefault();
+                if (dragTarget) {
+                    // 拖到网格内的文件夹：OS 文件→上传，应用内文件→移动
+                    let tp = dragTarget.dataset.path;
+                    clearDragHighlight();
+                    handleDropOnFolder(tp, e);
+                } else if (e.dataTransfer && e.dataTransfer.files.length) {
+                    // 拖到空白区域：作为上传到当前目录
+                    uploadFiles(e.dataTransfer.files, currentPath || "");
+                }
+            });
+        }
+
+        // 左侧树：容器级拖拽处理，用 closest('.tree-node') 只高亮光标下最内层的节点，
+        // 避免拖拽事件冒泡导致所有祖先文件夹都被高亮。
+        function initTreeDrop() {
+            let tree = document.getElementById("div_tree");
+            tree.addEventListener("dragover", function (e) {
+                e.preventDefault();
+                let node = e.target.closest(".tree-node");
+                if (node !== dragTarget) {
+                    clearDragHighlight();
+                    dragTarget = node; // 可能为 null（拖到树空白处），不高亮
+                    if (dragTarget) dragTarget.classList.add("drop-hover");
+                }
+            });
+            tree.addEventListener("dragleave", function (e) {
+                // 只有当真正离开树容器（relatedTarget 不在树内）时才清除
+                if (!tree.contains(e.relatedTarget)) clearDragHighlight();
+            });
+            tree.addEventListener("drop", function (e) {
+                e.preventDefault();
+                let node = e.target.closest(".tree-node");
+                clearDragHighlight();
+                if (node) handleDropOnFolder(node.dataset.path, e);
+            });
         }
 
         function f() {
-            // 标签点击
-            document.querySelectorAll("#treeTabs .nav-link").forEach(function (a) {
-                a.addEventListener("click", function () { showTab(a.dataset.tab); });
-            });
             document.getElementById("btn_clear_recent").addEventListener("click", clearRecents);
+            document.getElementById("btn_upload").addEventListener("click", function () {
+                document.getElementById("file_input").click();
+            });
+            document.getElementById("file_input").addEventListener("change", function (e) {
+                if (e.target.files.length) uploadFiles(e.target.files, currentPath || "");
+                e.target.value = "";
+            });
 
+            // 右键菜单交互
+            document.addEventListener("click", hideCtx);
+            document.getElementById("ctxMenu").addEventListener("click", function (e) { e.stopPropagation(); });
+            document.getElementById("ctx_delete").addEventListener("click", function () { hideCtx(); deleteFile(ctxPath); });
+            document.getElementById("ctx_copy").addEventListener("click", function () { copiedPath = ctxPath; hideCtx(); });
+            document.getElementById("ctx_paste").addEventListener("click", function () { if (copiedPath) copyFile(copiedPath, currentPath || ""); hideCtx(); });
+
+            initDragDrop();
+            initTreeDrop();
             buildTree();
             loadContents(null);
             renderRecents();
-            showTab("quick"); // 默认展示快捷方式
         }
     </script>
     <style>
-        .card { transition: all .5s; }
-        .card:hover { box-shadow: 0 0 8px #0c5460; }
+        body { background: linear-gradient(135deg, #eef2f7, #e3e9f0); min-height: 100vh; }
+        .card { transition: box-shadow .3s; border: none; }
+        .card:hover { box-shadow: 0 6px 24px rgba(12,84,96,.18); }
+        .card-title { color: #0c5460; font-weight: 700; letter-spacing: .5px; }
+        .card.shadow-sm { border: 1px solid #eef1f4; }
 
-        /* 左侧：标签 */
-        #treeTabs { margin-bottom: 8px; border-bottom: 1px solid #dee2e6; }
-        #treeTabs .nav-link { cursor: pointer; padding: 6px 12px; font-size: 14px; }
+        /* 分区小标题 */
+        .section-title {
+            font-size: 13px; font-weight: 700; color: #0c5460;
+            text-transform: uppercase; letter-spacing: .5px;
+            margin: 4px 0 8px; padding-left: 8px; border-left: 3px solid #0c5460;
+        }
 
         /* 左侧树 */
-        #div_tree { max-height: 65vh; overflow: auto; }
-        .tree-node { user-select: none; line-height: 1.8; }
-        .tree-node.active > .tree-label { font-weight: bold; color: #0c5460; }
+        #div_tree { max-height: 40vh; overflow: auto; padding-right: 2px; }
+        .tree-node { user-select: none; line-height: 1.9; border-radius: 4px; }
+        .tree-node.active > .tree-label { font-weight: bold; color: #0c5460; background: #e0f7fa; }
+        .tree-node:hover > .tree-label { background: #f0f7fa; }
         .twisty { cursor: pointer; display: inline-block; width: 16px; color: #888; font-size: 10px; }
-        .tree-label { cursor: pointer; display: inline-flex; align-items: center; }
+        .tree-label { cursor: pointer; display: inline-flex; align-items: center; padding: 1px 4px; border-radius: 4px; }
         .tree-label .ic { display: inline-flex; }
         .tree-label .name { margin-left: 6px; }
         .tree-children { margin-left: 0; }
+        /* 拖拽经过树文件夹时高亮 */
+        .tree-node.drop-hover { outline: 2px dashed #0c5460; background: #e0f7fa; border-radius: 4px; }
 
         /* 最近访问（快捷方式） */
-        #div_recent { max-height: 65vh; overflow: auto; }
-        .recent-item { display: flex; align-items: center; padding: 6px 4px; cursor: pointer; border-radius: 4px; }
-        .recent-item:hover { background: #f0f0f0; }
-        .recent-item .ic { display: inline-flex; }
+        #div_recent { max-height: 20vh; overflow: auto; }
+        .recent-item { display: flex; align-items: center; padding: 6px 8px; cursor: pointer; border-radius: 6px; transition: background .2s; }
+        .recent-item:hover { background: #eef5f8; }
+        .recent-item .ic { display: inline-flex; flex: 0 0 auto; }
         .recent-item .recent-name { margin-left: 8px; flex: 1; min-width: 0; }
         .recent-item .name { font-size: 13px; }
         .recent-item .path { font-size: 11px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* 右侧网格：一行4个 */
-        #div_grid { display: flex; flex-wrap: wrap; }
+        /* 右侧网格：卡片化 */
+        #div_grid { display: flex; flex-wrap: wrap; min-height: 140px; align-content: flex-start; }
         .grid-item {
             width: calc(25% - 16px);
             margin: 8px;
             padding: 10px;
-            border: 1px solid #eee;
-            border-radius: 6px;
-            text-align: center;
-            cursor: default;
-            transition: all .2s;
+            border: 1px solid #eef1f4;
+            border-radius: 10px;
+            background: #fff;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            transition: transform .15s, box-shadow .2s, border-color .2s;
         }
-        .grid-item:hover { box-shadow: 0 0 8px #0c5460; }
+        .grid-item:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,.12); border-color: #d6eaf8; }
         .grid-item.folder { cursor: pointer; }
-        .grid-item .ic { display: inline-flex; }
-        .grid-item .name { font-size: 13px; margin-top: 6px; word-break: break-all; width: 100%; }
-        .grid-item .size { font-size: 12px; color: #999; margin-top: 2px; }
-        .grid-item .dl { font-size: 12px; color: #0c5460; margin-top: 4px; }
-        .thumb { width: 100%; height: 120px; object-fit: cover; border-radius: 4px; background: #0001; }
-        .thumb-wrap { display: block; }
+        .grid-item .thumb-wrap {
+            width: 100%;
+            height: 110px;
+            border-radius: 8px;
+            background: #f5f7fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .grid-item .thumb {
+            width: 100%;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #0001;
+            display: block;
+        }
+        .grid-item video.thumb { object-fit: contain; background: #000; }
+        .grid-item .audio-player { width: 100%; height: 40px; margin-top: 4px; }
+        .grid-item .name {
+            font-size: 13px;
+            margin-top: 8px;
+            line-height: 1.3;
+            max-height: 2.6em;
+            overflow: hidden;
+            text-align: center;
+            word-break: break-all;
+        }
+        .grid-item .meta { font-size: 12px; color: #999; text-align: center; margin-top: 2px; }
+        .grid-item .actions { margin-top: auto; padding-top: 8px; text-align: center; }
+        .grid-item .dl {
+            font-size: 12px; color: #0c5460; text-decoration: none; cursor: pointer;
+            display: inline-block; padding: 3px 10px; margin: 0 2px;
+            border: 1px solid #d6eaf8; border-radius: 14px; transition: all .2s;
+        }
+        .grid-item .dl:hover { background: #0c5460; color: #fff; border-color: #0c5460; }
+
+        /* 拖拽经过文件夹时高亮 */
+        .grid-item.drop-hover { outline: 2px dashed #0c5460; background: #e0f7fa; }
+
+        /* 右键菜单（默认隐藏，只有右键时才显示） */
+        #ctxMenu {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            background: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0,0,0,.18);
+            min-width: 140px;
+            overflow: hidden;
+        }
+        #ctxMenu .ctx-item { padding: 10px 18px; cursor: pointer; font-size: 13px; }
+        #ctxMenu .ctx-item:hover { background: #f0f7fa; color: #0c5460; }
 
         @media (max-width: 768px) {
             .grid-item { width: calc(50% - 16px); }
@@ -498,12 +809,8 @@
             <hr>
             <div class="row">
                 <div class="col-md-4">
-                    <p class="text-secondary">文件夹</p>
-                    <ul class="nav nav-tabs" id="treeTabs">
-                        <li class="nav-item"><a class="nav-link active" data-tab="quick" href="javascript:void(0)">快捷方式</a></li>
-                        <li class="nav-item"><a class="nav-link" data-tab="tree" href="javascript:void(0)">文件树</a></li>
-                    </ul>
-                    <div id="panel_quick" class="card shadow-sm">
+                    <div class="section-title">快捷方式</div>
+                    <div class="card shadow-sm mb-3">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="text-secondary" style="font-size:12px;">最近访问</span>
@@ -512,12 +819,19 @@
                             <div id="div_recent"></div>
                         </div>
                     </div>
-                    <div id="panel_tree" class="card shadow-sm" style="display:none;">
+                    <div class="section-title">文件树</div>
+                    <div class="card shadow-sm">
                         <div class="card-body" id="div_tree"></div>
                     </div>
                 </div>
                 <div class="col-md-8">
-                    <p class="text-secondary" id="title_replace">根目录</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <p class="text-secondary mb-0" id="title_replace">根目录</p>
+                        <span>
+                            <button id="btn_upload" class="btn btn-sm btn-primary">上传</button>
+                            <input type="file" id="file_input" multiple style="display:none;">
+                        </span>
+                    </div>
                     <div class="card shadow-sm">
                         <div class="card-body" style="max-height:65vh; overflow:auto;">
                             <div id="div_grid"></div>
@@ -531,7 +845,14 @@
 </div>
 
 <div id="lightbox" onclick="closeLightbox();">
-    <img id="lightbox_img" src="" alt="preview">
+    <img id="lightbox_img" src="" alt="preview" onclick="event.stopPropagation();">
+    <video id="lightbox_video" controls style="display:none; max-width:92%; max-height:92%; border-radius:6px;" onclick="event.stopPropagation();"></video>
+</div>
+
+<div id="ctxMenu">
+    <div class="ctx-item" id="ctx_delete">删除</div>
+    <div class="ctx-item" id="ctx_copy">复制</div>
+    <div class="ctx-item" id="ctx_paste">粘贴</div>
 </div>
 
 </body>
