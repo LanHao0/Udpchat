@@ -1,6 +1,7 @@
 package club.lanhaoo.chat;
 
 import club.lanhaoo.chat.Classes.Message;
+import club.lanhaoo.chat.Classes.ServerAnnouncement;
 import club.lanhaoo.chat.Classes.UserSettings;
 import com.google.gson.Gson;
 
@@ -21,6 +22,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Server {
+    //服务器通告版本号（随发现通告一起广播）
+    public static final String VERSION = "1.0.0";
+
     static Set<String> receivedMessageIds =
             ConcurrentHashMap.newKeySet();
 
@@ -34,6 +38,12 @@ public class Server {
         //服务端其实就是所有消息的接收端！接收到消息打印到聊天室房间
 
         System.out.println("开始服务端");
+        String nickname = (args != null && args.length > 0 && args[0] != null && !args[0].trim().isEmpty())
+                ? args[0].trim()
+                : defaultNickname();
+        System.out.println("服务器昵称: " + nickname + " (发现端口 " + ServerAnnouncement.DISCOVERY_PORT + ")");
+        startDiscoveryBroadcast(nickname);
+
         InetAddress localHost = InetAddress.getLocalHost();
         //保存已经处理过的消息ID
 
@@ -226,6 +236,64 @@ public class Server {
                 System.out.println("转发失败 -> " + ip);
             }
         }
+    }
+
+    /**
+     * 持续广播服务器存在通告，方便客户端自动扫描发现。
+     * 通告格式(JSON): {"ip":"...","version":"...","nickname":"..."}
+     */
+    private static void startDiscoveryBroadcast(final String nickname) {
+        new Thread(() -> {
+            try {
+                DatagramSocket sock = new DatagramSocket();
+                sock.setBroadcast(true);
+                String ip = getIpAddress();
+                String broadcast = broadcastAddress(ip);
+                ServerAnnouncement ann = new ServerAnnouncement(ip, VERSION, nickname);
+                byte[] data = ann.toJson().getBytes(StandardCharsets.UTF_8);
+                while (true) {
+                    //子网广播
+                    if (broadcast != null) {
+                        try {
+                            sock.send(new DatagramPacket(data, data.length,
+                                    InetAddress.getByName(broadcast), ServerAnnouncement.DISCOVERY_PORT));
+                        } catch (Exception ignore) {
+                        }
+                    }
+                    //回环地址：同机客户端也能被发现
+                    try {
+                        sock.send(new DatagramPacket(data, data.length,
+                                InetAddress.getByName("127.0.0.1"), ServerAnnouncement.DISCOVERY_PORT));
+                    } catch (Exception ignore) {
+                    }
+                    try {
+                        Thread.sleep(3000);
+                    } catch (InterruptedException e) {
+                        break;
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, "ServerDiscovery").start();
+    }
+
+    //由本机IP推导子网广播地址（末位改为255）
+    private static String broadcastAddress(String ip) {
+        if (ip == null) return null;
+        String[] parts = ip.split("\\.");
+        if (parts.length != 4) return null;
+        parts[3] = "255";
+        return parts[0] + "." + parts[1] + "." + parts[2] + "." + parts[3];
+    }
+
+    private static String defaultNickname() {
+        try {
+            String h = InetAddress.getLocalHost().getHostName();
+            if (h != null && !h.trim().isEmpty()) return h;
+        } catch (Exception ignore) {
+        }
+        return "Server";
     }
 
     //这段代码来自https://stackoverflow.com/questions/17252018/getting-my-lan-ip-address-192-168-xxxx-ipv4，强转了两句的变量类型，适用于这里

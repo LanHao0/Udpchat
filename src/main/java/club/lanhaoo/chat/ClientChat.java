@@ -9,6 +9,7 @@ package club.lanhaoo.chat;
 
 
 import club.lanhaoo.chat.Classes.Message;
+import club.lanhaoo.chat.Classes.ServerAnnouncement;
 import club.lanhaoo.chat.Classes.UI.CellRender_Message;
 import club.lanhaoo.chat.Classes.UI.ImageFilter;
 import club.lanhaoo.chat.Classes.UserSettings;
@@ -26,7 +27,15 @@ import java.awt.event.*;
 import java.io.File;
 
 import java.io.IOException;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 
 public class ClientChat {
@@ -79,7 +88,17 @@ public class ClientChat {
         jButton_severIP.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                userSettings.setServerIp(JOptionPane.showInputDialog("重设服务器IP:"));
+                ServerAnnouncement picked = discoverServer(frame);
+                if (picked != null) {
+                    userSettings.setServerIp(picked.getIp());
+                    jButton_severIP.setText("服务器: " + picked.toString());
+                } else {
+                    String manual = JOptionPane.showInputDialog(frame, "请输入服务器地址:");
+                    if (manual != null && !manual.trim().isEmpty()) {
+                        userSettings.setServerIp(manual.trim());
+                        jButton_severIP.setText("服务器: " + manual.trim());
+                    }
+                }
             }
         });
 
@@ -153,8 +172,17 @@ public class ClientChat {
         });
 
 
-        final String serverIP = JOptionPane.showInputDialog("服务器地址");
-        userSettings.setServerIp(serverIP);
+        ServerAnnouncement picked = discoverServer(frame);
+        if (picked != null) {
+            userSettings.setServerIp(picked.getIp());
+            jButton_severIP.setText("服务器: " + picked.toString());
+        } else {
+            String manual = JOptionPane.showInputDialog(frame, "请输入服务器地址:");
+            if (manual != null && !manual.trim().isEmpty()) {
+                userSettings.setServerIp(manual.trim());
+                jButton_severIP.setText("服务器: " + manual.trim());
+            }
+        }
 
 
         //        发送按钮监听
@@ -256,6 +284,85 @@ public class ClientChat {
 
 
 
+    }
+
+    /**
+     * 自动扫描局域网内的服务器，弹出选择框。
+     * 返回选中的服务器通告（含 ip / 显示名），取消或无可选项时返回 null。
+     */
+    private static ServerAnnouncement discoverServer(Component parent) {
+        List<ServerAnnouncement> servers = scanServers(3000);
+        if (servers.isEmpty()) {
+            String manual = JOptionPane.showInputDialog(parent, "未扫描到服务器，请手动输入服务器地址:");
+            if (manual == null || manual.trim().isEmpty()) return null;
+            String ip = manual.trim();
+            return new ServerAnnouncement(ip, "", ip);
+        }
+
+        String[] options = new String[servers.size() + 1];
+        for (int i = 0; i < servers.size(); i++) {
+            options[i] = servers.get(i).toString();
+        }
+        options[servers.size()] = "手动输入...";
+
+        String sel = (String) JOptionPane.showInputDialog(
+                parent,
+                "选择服务器:",
+                "扫描到 " + servers.size() + " 个服务器",
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]);
+
+        if (sel == null) return null;
+
+        if ("手动输入...".equals(sel)) {
+            String manual = JOptionPane.showInputDialog(parent, "请输入服务器地址:");
+            if (manual == null || manual.trim().isEmpty()) return null;
+            String ip = manual.trim();
+            return new ServerAnnouncement(ip, "", ip);
+        }
+
+        for (ServerAnnouncement a : servers) {
+            if (a.toString().equals(sel)) return a;
+        }
+        //兜底：从 "nickname/ip" 解析出 ip
+        int idx = sel.lastIndexOf('/');
+        String ip = idx >= 0 ? sel.substring(idx + 1) : sel;
+        return new ServerAnnouncement(ip, "", ip);
+    }
+
+    /**
+     * 在发现端口上监听一段时间，收集局域网内广播的服务器通告（按 ip 去重）。
+     */
+    private static List<ServerAnnouncement> scanServers(int timeoutMs) {
+        List<ServerAnnouncement> list = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket(ServerAnnouncement.DISCOVERY_PORT);
+            socket.setSoTimeout(800);
+            byte[] buf = new byte[1024];
+            long end = System.currentTimeMillis() + timeoutMs;
+            while (System.currentTimeMillis() < end) {
+                try {
+                    DatagramPacket p = new DatagramPacket(buf, buf.length);
+                    socket.receive(p);
+                    String s = new String(p.getData(), 0, p.getLength(), StandardCharsets.UTF_8);
+                    ServerAnnouncement a = ServerAnnouncement.fromJson(s);
+                    if (a != null && a.getIp() != null && seen.add(a.getIp())) {
+                        list.add(a);
+                    }
+                } catch (SocketTimeoutException e) {
+                    //单次接收超时，继续直到总超时
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (socket != null) socket.close();
+        }
+        return list;
     }
 
     private void createUIComponents() {
