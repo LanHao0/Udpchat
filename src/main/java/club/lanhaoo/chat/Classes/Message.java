@@ -378,6 +378,36 @@ public class Message {
 
     /**
      *
+     * 客户端加入/保活：仅向服务器登记本机IP，不依赖聊天消息也能收到转发
+     *
+     */
+
+    public boolean sendJoinRaw(UserSettings userSettings){
+
+        try{
+
+            new DatagramSend(
+                    2112,
+                    this,
+                    userSettings.getServerIp()
+            ).sendRaw();
+
+            return true;
+
+        }catch(Exception e){
+
+            e.printStackTrace();
+
+        }
+
+        return false;
+
+    }
+
+
+
+    /**
+     *
      * 服务器广播
      *
      */

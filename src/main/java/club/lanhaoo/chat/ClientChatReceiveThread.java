@@ -48,8 +48,6 @@ public class ClientChatReceiveThread implements Runnable {
 
             while (true) {
                 datagramSocket.receive(datagramPacket);
-                //todo 接受到的消息都是来自服务端的。。。。
-
                 String message_pure = new String(datagramPacket.getData(), 0, datagramPacket.getLength(), StandardCharsets.UTF_8);
 
                 Gson gson = new Gson();

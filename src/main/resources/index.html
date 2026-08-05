@@ -9,6 +9,7 @@
     <script type="application/javascript" src="./?getAssets=bootstrap.min.js"></script>
     <script>
         var currentPath = null;
+        var RECENT_KEY = "udpchat_recent_folders"; // 最近访问文件夹（最多10个）
 
         function iconFor(type) {
             switch (type) {
@@ -59,6 +60,78 @@
             return (b / 1073741824).toFixed(1) + " GB";
         }
 
+        function basename(p) {
+            let parts = (p || "").split(/[\\/]+/).filter(s => s.length > 0);
+            return parts.length ? parts[parts.length - 1] : (p || "");
+        }
+
+        // ====== 最近访问（快捷方式）======
+        function loadRecents() {
+            try {
+                let raw = localStorage.getItem(RECENT_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) { return []; }
+        }
+        function saveRecents(arr) {
+            try { localStorage.setItem(RECENT_KEY, JSON.stringify(arr)); } catch (e) {}
+        }
+        function addRecent(path) {
+            if (!path) return;
+            let arr = loadRecents();
+            arr = arr.filter(p => p !== path); // 去重
+            arr.unshift(path);
+            if (arr.length > 10) arr = arr.slice(0, 10);
+            saveRecents(arr);
+            renderRecents();
+        }
+        function clearRecents() {
+            saveRecents([]);
+            renderRecents();
+        }
+        function renderRecents() {
+            let arr = loadRecents();
+            let box = document.getElementById("div_recent");
+            box.innerHTML = "";
+            if (arr.length === 0) {
+                let tip = document.createElement("div");
+                tip.className = "text-secondary";
+                tip.style.fontSize = "12px";
+                tip.textContent = "暂无最近访问的文件夹";
+                box.appendChild(tip);
+                return;
+            }
+            for (let p of arr) {
+                let row = document.createElement("div");
+                row.className = "recent-item";
+                row.appendChild(iconEl("folder"));
+                let nm = document.createElement("div");
+                nm.className = "recent-name";
+                let b = document.createElement("div");
+                b.className = "name";
+                b.textContent = basename(p);
+                let pp = document.createElement("div");
+                pp.className = "path";
+                pp.textContent = p;
+                nm.appendChild(b);
+                nm.appendChild(pp);
+                row.appendChild(nm);
+                row.addEventListener("click", function () { gotoRecent(p); });
+                box.appendChild(row);
+            }
+        }
+        function gotoRecent(path) {
+            showTab("tree");
+            selectFolder(path);
+        }
+
+        // ====== 标签切换：快捷方式 / 文件树 ======
+        function showTab(name) {
+            let tabs = document.querySelectorAll("#treeTabs .nav-link");
+            for (let t of tabs) t.classList.toggle("active", t.dataset.tab === name);
+            document.getElementById("panel_quick").style.display = (name === "quick") ? "block" : "none";
+            document.getElementById("panel_tree").style.display = (name === "tree") ? "block" : "none";
+        }
+
         // ====== 左侧树状目录 ======
         function depthOf(node) {
             let d = 0, p = node.parentElement;
@@ -96,13 +169,19 @@
             node.appendChild(label);
             node.appendChild(children);
 
-            // 点击箭头和点击文件名，行为完全一致：展开子目录并加载右侧内容
+            // 点击箭头：展开/折叠切换
             twisty.addEventListener("click", function (e) {
                 e.stopPropagation();
-                activateNode(node);
+                toggleNode(node);
             });
+            // 点击文件名：展开并加载右侧内容
             label.addEventListener("click", function () {
-                activateNode(node);
+                let c = node.querySelector(":scope > .tree-children");
+                if (c && c.dataset.loaded !== "1") {
+                    loadChildrenInto(node, c, depthOf(node) + 1);
+                }
+                expandNode(node);
+                selectFolder(node.dataset.path);
             });
             return node;
         }
@@ -116,6 +195,28 @@
             }
         }
 
+        function collapseNode(node) {
+            let children = node.querySelector(":scope > .tree-children");
+            if (children) {
+                children.style.display = "none";
+                let tw = node.querySelector(":scope > .twisty");
+                if (tw) tw.textContent = "►";
+            }
+        }
+
+        function toggleNode(node) {
+            let children = node.querySelector(":scope > .tree-children");
+            let isOpen = children && children.style.display === "block";
+            if (isOpen) {
+                collapseNode(node);
+            } else {
+                if (children && children.dataset.loaded !== "1") {
+                    loadChildrenInto(node, children, depthOf(node) + 1);
+                }
+                expandNode(node);
+            }
+        }
+
         function loadChildrenInto(node, children, depth) {
             let sub;
             try {
@@ -125,15 +226,6 @@
             }
             for (let it of sub) children.appendChild(buildTreeNode(it, depth));
             children.dataset.loaded = "1";
-        }
-
-        function activateNode(node) {
-            let children = node.querySelector(":scope > .tree-children");
-            if (children && children.dataset.loaded !== "1") {
-                loadChildrenInto(node, children, depthOf(node) + 1);
-            }
-            expandNode(node);
-            selectFolder(node.dataset.path);
         }
 
         // 把绝对路径拆成从根到自身的各级祖先路径
@@ -304,6 +396,7 @@
         }
 
         function selectFolder(path) {
+            if (path) addRecent(path); // 记录最近访问，用于快捷方式
             currentPath = path;
             revealInTree(path);
             let nodes = document.querySelectorAll(".tree-node");
@@ -324,13 +417,25 @@
         }
 
         function f() {
+            // 标签点击
+            document.querySelectorAll("#treeTabs .nav-link").forEach(function (a) {
+                a.addEventListener("click", function () { showTab(a.dataset.tab); });
+            });
+            document.getElementById("btn_clear_recent").addEventListener("click", clearRecents);
+
             buildTree();
             loadContents(null);
+            renderRecents();
+            showTab("quick"); // 默认展示快捷方式
         }
     </script>
     <style>
         .card { transition: all .5s; }
         .card:hover { box-shadow: 0 0 8px #0c5460; }
+
+        /* 左侧：标签 */
+        #treeTabs { margin-bottom: 8px; border-bottom: 1px solid #dee2e6; }
+        #treeTabs .nav-link { cursor: pointer; padding: 6px 12px; font-size: 14px; }
 
         /* 左侧树 */
         #div_tree { max-height: 65vh; overflow: auto; }
@@ -341,6 +446,15 @@
         .tree-label .ic { display: inline-flex; }
         .tree-label .name { margin-left: 6px; }
         .tree-children { margin-left: 0; }
+
+        /* 最近访问（快捷方式） */
+        #div_recent { max-height: 65vh; overflow: auto; }
+        .recent-item { display: flex; align-items: center; padding: 6px 4px; cursor: pointer; border-radius: 4px; }
+        .recent-item:hover { background: #f0f0f0; }
+        .recent-item .ic { display: inline-flex; }
+        .recent-item .recent-name { margin-left: 8px; flex: 1; min-width: 0; }
+        .recent-item .name { font-size: 13px; }
+        .recent-item .path { font-size: 11px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* 右侧网格：一行4个 */
         #div_grid { display: flex; flex-wrap: wrap; }
@@ -385,7 +499,20 @@
             <div class="row">
                 <div class="col-md-4">
                     <p class="text-secondary">文件夹</p>
-                    <div class="card shadow-sm">
+                    <ul class="nav nav-tabs" id="treeTabs">
+                        <li class="nav-item"><a class="nav-link active" data-tab="quick" href="javascript:void(0)">快捷方式</a></li>
+                        <li class="nav-item"><a class="nav-link" data-tab="tree" href="javascript:void(0)">文件树</a></li>
+                    </ul>
+                    <div id="panel_quick" class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-secondary" style="font-size:12px;">最近访问</span>
+                                <a href="javascript:void(0)" id="btn_clear_recent" class="text-secondary" style="font-size:12px;">清空</a>
+                            </div>
+                            <div id="div_recent"></div>
+                        </div>
+                    </div>
+                    <div id="panel_tree" class="card shadow-sm" style="display:none;">
                         <div class="card-body" id="div_tree"></div>
                     </div>
                 </div>

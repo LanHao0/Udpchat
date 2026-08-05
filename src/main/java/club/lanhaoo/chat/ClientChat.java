@@ -113,12 +113,7 @@ public class ClientChat {
         jButton_severIP.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                discoverServer(frame, picked -> {
-                    if (picked != null) {
-                        userSettings.setServerIp(picked.getIp());
-                        jButton_severIP.setText("服务器: " + picked.toString());
-                    }
-                });
+                discoverServer(frame, picked -> onServerPicked(picked, jButton_severIP, userSettings));
             }
         });
 
@@ -129,12 +124,7 @@ public class ClientChat {
         jButton_scanServer.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                discoverServer(frame, picked -> {
-                    if (picked != null) {
-                        userSettings.setServerIp(picked.getIp());
-                        jButton_severIP.setText("服务器: " + picked.toString());
-                    }
-                });
+                discoverServer(frame, picked -> onServerPicked(picked, jButton_severIP, userSettings));
             }
         });
 
@@ -208,12 +198,7 @@ public class ClientChat {
         });
 
 
-        discoverServer(frame, picked -> {
-            if (picked != null) {
-                userSettings.setServerIp(picked.getIp());
-                jButton_severIP.setText("服务器: " + picked.toString());
-            }
-        });
+        discoverServer(frame, picked -> onServerPicked(picked, jButton_severIP, userSettings));
 
 
         //        发送按钮监听
@@ -294,6 +279,23 @@ public class ClientChat {
         new Thread(cCRT).start();
 
 
+    }
+
+    /**
+     * 选定服务器后：记录服务器地址、更新按钮，并向服务器发送 JOIN 报文，
+     * 让服务器登记本机IP，从而无需先发聊天消息也能收到其他人的消息。
+     */
+    private static void onServerPicked(ServerAnnouncement picked, JButton button, UserSettings userSettings) {
+        if (picked == null) {
+            return;
+        }
+        userSettings.setServerIp(picked.getIp());
+        if (button != null) {
+            button.setText("服务器: " + picked.toString());
+        }
+        // 注册到服务器（即使UDP丢包，客户端稍后发消息也会再次登记）
+        Message join = new Message("JOIN", "", "");
+        join.sendJoinRaw(userSettings);
     }
 
     private static void SendMessage(JTextArea jTextArea_message, UserSettings userSettings, ListModel listModel_message) {

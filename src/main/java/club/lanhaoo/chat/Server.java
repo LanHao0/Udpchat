@@ -90,6 +90,19 @@ public class Server {
             if("ACK".equals(command)){
                 continue;
             }
+
+            //JOIN：仅登记客户端IP，不广播聊天消息（避免刷出空消息）
+            if("JOIN".equals(command)){
+                Message ack = new Message(
+                        "ACK",
+                        "",
+                        message.getMessageId()
+                );
+                ack.sendToClient(fromIP);
+                System.out.println("客户端加入: " + fromIP);
+                continue;
+            }
+
             String messageId = message.getMessageId();
 
 
