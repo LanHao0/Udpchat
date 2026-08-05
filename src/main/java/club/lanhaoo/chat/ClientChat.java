@@ -13,6 +13,8 @@ import club.lanhaoo.chat.Classes.UI.CellRender_Message;
 import club.lanhaoo.chat.Classes.UI.ImageFilter;
 import club.lanhaoo.chat.Classes.UserSettings;
 import club.lanhaoo.chat.HttpFileShare.App;
+import com.formdev.flatlaf.FlatLightLaf;
+import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import fi.iki.elonen.NanoHTTPD;
@@ -32,6 +34,7 @@ public class ClientChat {
     private JTextField textField1_message;
 
     public ClientChat() {
+        FlatMacLightLaf.setup();
         initComponents();
     }
 
