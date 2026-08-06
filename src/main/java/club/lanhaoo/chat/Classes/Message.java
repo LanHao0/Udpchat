@@ -60,6 +60,9 @@ public class Message {
     //图片
     private String imgBase64;
 
+    //媒体类型：voice（语音）/ image（图片）/ 其他为 null（配合 content 中的 http 链接）
+    private String mediaType;
+
 
 
     public Message(
@@ -272,6 +275,18 @@ public class Message {
     public void setImgBase64(String imgBase64){
 
         this.imgBase64=imgBase64;
+
+    }
+
+    public String getMediaType(){
+
+        return mediaType;
+
+    }
+
+    public void setMediaType(String mediaType){
+
+        this.mediaType=mediaType;
 
     }
 

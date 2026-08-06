@@ -14,6 +14,7 @@ import club.lanhaoo.chat.Classes.UI.CellRender_Message;
 import club.lanhaoo.chat.Classes.UI.ImageFilter;
 import club.lanhaoo.chat.Classes.UserSettings;
 import club.lanhaoo.chat.HttpFileShare.App;
+import club.lanhaoo.chat.Classes.VoiceRecorder;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -22,26 +23,46 @@ import fi.iki.elonen.NanoHTTPD;
 import org.apache.commons.io.FilenameUtils;
 
 import javax.swing.*;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.Element;
+import javax.swing.text.html.HTML;
+import javax.swing.text.html.HTMLDocument;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
+import java.net.URI;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
+import javax.sound.sampled.*;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import javax.swing.SwingWorker;
 
 
 public class ClientChat {
     private JTextArea textArea1_chat;
     private JTextField textField1_message;
+
+    // 用于语言切换时重建动态工具栏文案
+    private static ServerAnnouncement currentServer;
+    private static String startedNickname;
 
     public ClientChat() {
         FlatMacLightLaf.setup();
@@ -53,14 +74,26 @@ public class ClientChat {
 
 
         final UserSettings userSettings = new UserSettings();
+        userSettings.load();
+        I18n.setLanguage(userSettings.getLanguage());
 
-        final JFrame frame = new JFrame("ClientChat");
+        // 界面文案刷新回调（在组件创建完成后赋值，详见下方 applyI18nRef[0] = ...）
+        final Runnable[] applyI18nRef = {null};
+        // 发送消息后，强制把消息列表滚到最底部（无视用户是否曾上滑看历史）
+        final boolean[] forceScrollOnNext = {false};
+
+        final JFrame frame = new JFrame(I18n.get("app.title"));
 
         ClientChat clientChat = new ClientChat();
 
         JPanel jPanel = clientChat.panel1;
 
         final JTextArea jTextArea_message = clientChat.textArea_message;
+        // 输入框：浅色圆角边框 + 内边距 + 统一字体，整体更整洁
+        jTextArea_message.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
+        jTextArea_message.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(0xd0d4d9), 1, true),
+                BorderFactory.createEmptyBorder(6, 8, 6, 8)));
 
 
         JButton jButton_send = clientChat.sendButton;
@@ -70,30 +103,49 @@ public class ClientChat {
         JToolBar jToolBar = clientChat.Jtoolbar;
         jToolBar.setFloatable(false);
 //        阻止移动
+        // 工具栏增加内边距，按钮之间更舒展
+        jToolBar.setMargin(new Insets(6, 12, 6, 12));
+        jToolBar.setBorder(BorderFactory.createEmptyBorder(2, 4, 2, 4));
 
-        //开启服务器按钮：在当前客户端进程内启动一个服务器（后台线程），并广播自身以便被发现
+        // 昵称 / 隐藏IP 已迁移到“设置”页（见 Settings.openWindow），
+        // 工具栏静态项只保留 服务器IP / 文件共享 / 关于，其余按钮在代码中动态添加
+        cleanupToolbarSeparators(jToolBar);
+
+        // 设置按钮（打开设置页，含昵称 / 隐藏IP / 语言）
+        final JButton settingsButton = new JButton(I18n.get("toolbar.settings"));
+        jToolBar.addSeparator();
+        jToolBar.add(settingsButton);
+        settingsButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Settings.openWindow(userSettings, listModel_message,
+                        () -> SwingUtilities.invokeLater(() -> {
+                            if (applyI18nRef[0] != null) applyI18nRef[0].run();
+                        }));
+            }
+        });
+
+        // 开启服务器按钮：在当前客户端进程内启动一个服务器（后台线程），并广播自身以便被发现
         JButton jButton_startServer = new JButton("Start Server");
         jToolBar.addSeparator();
         jToolBar.add(jButton_startServer);
-        jButton_startServer.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String nick = JOptionPane.showInputDialog(frame, "服务器昵称(可留空):", Server.defaultNickname());
-                final String nickname = (nick == null || nick.trim().isEmpty()) ? Server.defaultNickname() : nick.trim();
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Server.startServer(nickname);
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
-                        }
-                    }
-                }).start();
-                ((DefaultListModel) listModel_message).addElement(new Message("local", "", "已启动服务器，昵称: " + nickname));
-                jButton_startServer.setText("Server: " + nickname);
-            }
-        });
+
+        // 启动服务器动作：抽成 Runnable，工具栏按钮与扫描框“启动服务器”按钮共用
+        final Runnable startServerAction = () -> {
+            String nick = JOptionPane.showInputDialog(frame, "服务器昵称(可留空):", Server.defaultNickname());
+            final String nickname = (nick == null || nick.trim().isEmpty()) ? Server.defaultNickname() : nick.trim();
+            new Thread(() -> {
+                try {
+                    Server.startServer(nickname);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                }
+            }).start();
+            ((DefaultListModel) listModel_message).addElement(new Message("local", "", I18n.get("msg.serverStarted", nickname)));
+            startedNickname = nickname;
+            jButton_startServer.setText(I18n.get("toolbar.startServer") + ": " + nickname);
+        };
+        jButton_startServer.addActionListener(e -> startServerAction.run());
 
         frame.setContentPane(jPanel);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -113,54 +165,32 @@ public class ClientChat {
         jButton_severIP.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                discoverServer(frame, picked -> onServerPicked(picked, jButton_severIP, userSettings));
+                discoverServer(frame, picked -> onServerPicked(picked, jButton_severIP, userSettings), startServerAction);
             }
         });
 
-        //重新扫描服务器按钮：随时可点，弹出“扫描中”并重新发现局域网服务器
-        JButton jButton_scanServer = new JButton("Scan");
-        jToolBar.addSeparator();
-        jToolBar.add(jButton_scanServer);
-        jButton_scanServer.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                discoverServer(frame, picked -> onServerPicked(picked, jButton_severIP, userSettings));
-            }
-        });
-
-
-        JButton jButton_HideIp = clientChat.hideIPButton;
-        jButton_HideIp.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                userSettings.setHidemyIp(!userSettings.getHidemyIp());
-                if (userSettings.getHidemyIp()) {
-                    ((DefaultListModel) listModel_message).addElement(new Message("local",
-                            "", "已设置隐藏ip, 若已设置昵称 需要重新设置昵称"));
-                    userSettings.setUserName(null);
-                } else {
-                    ((DefaultListModel) listModel_message).addElement(new Message("local",
-                            "", "已显示IP"));
-                }
-            }
-        });
-
-        JButton jButton_Nickname = clientChat.nicknameButton;
-        jButton_Nickname.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String username = JOptionPane.showInputDialog("输入自定义昵称");
-                if (username != null && !username.equals("")) {
-                    userSettings.setUserName(username);
-                    ((DefaultListModel) listModel_message).addElement(new Message("local", "", "已设置昵称" + userSettings.getUserName()));
-                } else {
-                    userSettings.setUserName(null);
-                }
-            }
-        });
+        // 昵称 / 隐藏IP 已迁移到“设置”页（见 Settings.openWindow），此处不再单独处理
 
         final JButton jButton_fileShare = clientChat.fileShareButton;
         final App app = new App();
+
+        // 文件共享是否在运行（手动或发送媒体时自动开启）
+        final boolean[] fileShareRunning = {false};
+        // 发送语音/图片前确保文件共享已开启：媒体文件通过 :8089 免密端点提供给对方
+        final Runnable ensureFileShare = () -> {
+            if (!fileShareRunning[0]) {
+                try {
+                    app.setWebpassword("");
+                    app.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
+                    fileShareRunning[0] = true;
+                    SwingUtilities.invokeLater(() -> ((DefaultListModel) listModel_message).addElement(
+                            new Message("local", "", "已自动开启文件共享，用于收发语音/图片")));
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        };
+
 
         jButton_fileShare.addActionListener(new ActionListener() {
             @Override
@@ -168,16 +198,18 @@ public class ClientChat {
                 if (userSettings.isOnFileSharing()) {
                     app.stop();
                     userSettings.setOnFileSharing(false);
-                    jButton_fileShare.setText("FileShare");
-                    ((DefaultListModel) listModel_message).addElement(new Message("local", "", "已停止分享文件"));
+                    fileShareRunning[0] = false;
+                    jButton_fileShare.setText(I18n.get("toolbar.fileShare"));
+                    ((DefaultListModel) listModel_message).addElement(new Message("local", "", I18n.get("msg.fileshareStop")));
 
                 } else {
-                    app.setWebpassword(JOptionPane.showInputDialog("设置密码?"));
+                    app.setWebpassword(JOptionPane.showInputDialog(I18n.get("fileshare.passwordPrompt")));
                     try {
                         app.start(NanoHTTPD.SOCKET_READ_TIMEOUT, false);
+                        fileShareRunning[0] = true;
 
-                        ((DefaultListModel) listModel_message).addElement(new Message("local", "", "开始分享文件,ip地址: " + InetAddress.getLocalHost().getHostAddress() + ":8089"));
-                        jButton_fileShare.setText("停止分享文件");
+                        ((DefaultListModel) listModel_message).addElement(new Message("local", "", I18n.get("msg.fileshareStart", InetAddress.getLocalHost().getHostAddress() + ":8089")));
+                        jButton_fileShare.setText(I18n.get("toolbar.fileShare.stop"));
 
                     } catch (IOException ex) {
                         ex.printStackTrace();
@@ -198,30 +230,120 @@ public class ClientChat {
         });
 
 
-        discoverServer(frame, picked -> onServerPicked(picked, jButton_severIP, userSettings));
+        discoverServer(frame, picked -> onServerPicked(picked, jButton_severIP, userSettings), startServerAction);
 
 
         //        发送按钮监听
         jButton_send.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                forceScrollOnNext[0] = true;
                 SendMessage(jTextArea_message, userSettings, listModel_message);
             }
         });
+
+        // 发送媒体（图片/语音）通用逻辑：把文件放进媒体目录，发一条带 http 链接的消息。
+        // 不在此本地添加到消息列表，避免与服务器回显重复（与文本消息一致）。
+        Consumer<File> sendMediaFile = (File f) -> {
+            try {
+                ensureFileShare.run();
+                String ip = Server.getIpAddress();
+                String link = "http://" + ip + ":8089/?chatfile=" + URLEncoder.encode(f.getName(), "UTF-8");
+                Message message = new Message("text", "", link);
+                message.setMediaType(f.getName().toLowerCase().endsWith(".wav") ? "voice" : "image");
+                message.setFromIp(ip);
+                new Thread(() -> message.send(userSettings)).start();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                SwingUtilities.invokeLater(() -> ((DefaultListModel) listModel_message).addElement(
+                        new Message("local", "", "发送失败: " + ex.getMessage())));
+            }
+        };
 
         JButton send_pic = clientChat.sendPicturesButton;
         send_pic.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JFileChooser jFileChooser = new JFileChooser();
-                ImageFilter imageFilter = new ImageFilter();
-                jFileChooser.setFileFilter(imageFilter);
+                jFileChooser.setFileFilter(new ImageFilter());
                 if (jFileChooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
                     File f = jFileChooser.getSelectedFile();
-
-                    // read  and/or display the file somehow. ....
+                    if (f == null) return;
+                    try {
+                        File dir = App.getMediaDir();
+                        String nm = f.getName();
+                        int dot = nm.lastIndexOf('.');
+                        String ext = (dot > 0) ? nm.substring(dot) : "";
+                        File dest = new File(dir, "img_" + UUID.randomUUID().toString() + ext);
+                        Files.copy(f.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                        sendMediaFile.accept(dest);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        JOptionPane.showMessageDialog(frame, "发送图片失败: " + ex.getMessage());
+                    }
                 }
+            }
+        });
 
+        // ====== 发送语音：按下开始录音，再次按下停止并发送 ======
+        final VoiceRecorder[] recorder = {null};
+        clientChat.voiceButton.addActionListener(e -> {
+            if (recorder[0] == null) {
+                try {
+                    recorder[0] = new VoiceRecorder();
+                    recorder[0].start();
+                    clientChat.voiceButton.setText("停止并发送");
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "无法开始录音: " + ex.getMessage());
+                }
+            } else {
+                try {
+                    File wav = recorder[0].stop();
+                    recorder[0] = null;
+                    clientChat.voiceButton.setText("【语音】");
+                    sendMediaFile.accept(wav);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    recorder[0] = null;
+                    clientChat.voiceButton.setText("【语音】");
+                }
+            }
+        });
+
+        // ====== 发送文件：选任意文件拷贝进媒体目录，发一条带 http 链接的“file”媒体消息 ======
+        final JButton sendFileButton = clientChat.sendFileButton;
+        Consumer<File> sendFileMedia = (File f) -> {
+            try {
+                ensureFileShare.run();
+                String ip = Server.getIpAddress();
+                String link = "http://" + ip + ":8089/?chatfile=" + URLEncoder.encode(f.getName(), "UTF-8");
+                Message message = new Message("text", "", link);
+                message.setMediaType("file");
+                message.setFromIp(ip);
+                new Thread(() -> message.send(userSettings)).start();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                SwingUtilities.invokeLater(() -> ((DefaultListModel) listModel_message).addElement(
+                        new Message("local", "", "发送失败: " + ex.getMessage())));
+            }
+        };
+        sendFileButton.addActionListener(e -> {
+            JFileChooser chooser = new JFileChooser();
+            if (chooser.showOpenDialog(frame) == JFileChooser.APPROVE_OPTION) {
+                File f = chooser.getSelectedFile();
+                if (f == null) return;
+                try {
+                    File dir = App.getMediaDir();
+                    // 保留原始文件名，便于接收方看到真实文件名（前缀避免重名覆盖）
+                    String nm = f.getName();
+                    File dest = new File(dir, "file_" + UUID.randomUUID().toString() + "_" + nm);
+                    Files.copy(f.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                    sendFileMedia.accept(dest);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "发送文件失败: " + ex.getMessage());
+                }
             }
         });
 
@@ -231,6 +353,7 @@ public class ClientChat {
 
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER && e.isAltDown()) {
+                    forceScrollOnNext[0] = true;
                     SendMessage(jTextArea_message, userSettings, listModel_message);
                 }
 
@@ -249,13 +372,123 @@ public class ClientChat {
 
         jList_Message.setModel(listModel_message);
 
-        ((DefaultListModel) listModel_message).addElement(new Message("local", "", "开始接收服务器数据"));
+        ((DefaultListModel) listModel_message).addElement(new Message("local", "", I18n.get("msg.startReceive")));
         CellRender_Message listCellRenderer = new CellRender_Message();
         jList_Message.setCellRenderer(listCellRenderer);
+        // 图片下载生成缩略图后，请求列表重绘以把图片内联显示出来（并重新计算行高）
+        CellRender_Message.setRepaintCallback(() -> {
+            jList_Message.revalidate();
+            jList_Message.repaint();
+        });
+        // 聊天区使用柔和背景，配合气泡更清爽
+        jList_Message.setBackground(new Color(0xf5f6f8));
+        jList_Message.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
+
+        // ====== 消息列表：右键复制消息 / 放大预览 ======
+        final JPopupMenu msgPopup = new JPopupMenu();
+        JMenuItem copyMsgItem = new JMenuItem("复制消息");
+        copyMsgItem.addActionListener(e -> {
+            int idx = jList_Message.getSelectedIndex();
+            if (idx >= 0) {
+                Object o = jList_Message.getModel().getElementAt(idx);
+                if (o instanceof Message) {
+                    String c = ((Message) o).getContent();
+                    if (c != null && !c.isEmpty()) {
+                        StringSelection ss = new StringSelection(c);
+                        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ss, ss);
+                    }
+                }
+            }
+        });
+        msgPopup.add(copyMsgItem);
+        // 仅当选中图片消息时显示“放大预览”
+        JMenuItem previewMsgItem = new JMenuItem("放大预览");
+        previewMsgItem.addActionListener(e -> {
+            int idx = jList_Message.getSelectedIndex();
+            if (idx >= 0) {
+                Object o = jList_Message.getModel().getElementAt(idx);
+                if (o instanceof Message && "image".equals(((Message) o).getMediaType())) {
+                    openImagePreview(((Message) o).getContent());
+                }
+            }
+        });
+        msgPopup.add(previewMsgItem);
+
+        // ====== 消息列表：左键点击链接打开 ======
+        jList_Message.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) showMsgPopup(e);
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) showMsgPopup(e);
+            }
+            private void showMsgPopup(MouseEvent e) {
+                int idx = jList_Message.locationToIndex(e.getPoint());
+                if (idx >= 0) {
+                    jList_Message.setSelectedIndex(idx);
+                    Object o = jList_Message.getModel().getElementAt(idx);
+                    previewMsgItem.setVisible(o instanceof Message
+                            && "image".equals(((Message) o).getMediaType()));
+                    msgPopup.show(jList_Message, e.getX(), e.getY());
+                }
+            }
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getButton() != MouseEvent.BUTTON1 || e.isPopupTrigger()) return;
+                int idx = jList_Message.locationToIndex(e.getPoint());
+                if (idx < 0) return;
+                Rectangle cell = jList_Message.getCellBounds(idx, idx);
+                if (cell == null || !cell.contains(e.getPoint())) return;
+                Message m = (Message) jList_Message.getModel().getElementAt(idx);
+                String url = findUrlAt(m, jList_Message, e.getPoint(), cell);
+                if (url != null) {
+                    if ("voice".equals(m.getMediaType())) {
+                        playVoice(url);
+                    } else if ("image".equals(m.getMediaType())) {
+                        openImagePreview(url);
+                    } else if ("file".equals(m.getMediaType())) {
+                        downloadAndOpen(url);
+                    } else {
+                        openInBrowser(url);
+                    }
+                }
+            }
+        });
+
+        // ====== 输入框：右键菜单（剪切/复制/粘贴/全选）======
+        final JPopupMenu textPopup = new JPopupMenu();
+        JMenuItem cutItem = new JMenuItem("剪切");
+        cutItem.addActionListener(e -> jTextArea_message.cut());
+        JMenuItem copyItem = new JMenuItem("复制");
+        copyItem.addActionListener(e -> jTextArea_message.copy());
+        JMenuItem pasteItem = new JMenuItem("粘贴");
+        pasteItem.addActionListener(e -> jTextArea_message.paste());
+        JMenuItem selectAllItem = new JMenuItem("全选");
+        selectAllItem.addActionListener(e -> jTextArea_message.selectAll());
+        textPopup.add(cutItem);
+        textPopup.add(copyItem);
+        textPopup.add(pasteItem);
+        textPopup.addSeparator();
+        textPopup.add(selectAllItem);
+        jTextArea_message.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) textPopup.show(jTextArea_message, e.getX(), e.getY());
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) textPopup.show(jTextArea_message, e.getX(), e.getY());
+            }
+        });
 
         final JList jList_iplist = clientChat.list1;
         final ListModel listModel_ip = new DefaultListModel();
         jList_iplist.setModel(listModel_ip);
+        jList_iplist.setBackground(new Color(0xf5f6f8));
+        jList_iplist.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
+        jList_iplist.setFixedCellHeight(26);
         //设置list模型
 
         jList_iplist.addMouseListener(new MouseAdapter() {
@@ -298,6 +531,8 @@ public class ClientChat {
         };
         Runnable scrollToBottom = () -> {
             programmaticScroll[0] = true;
+            int last = ((DefaultListModel) listModel_message).getSize() - 1;
+            if (last >= 0) jList_Message.ensureIndexIsVisible(last);
             jScrollBar_chat.setValue(jScrollBar_chat.getMaximum());
             programmaticScroll[0] = false;
             userScrolledUp[0] = false;
@@ -306,7 +541,7 @@ public class ClientChat {
         };
         Runnable showNewMsgBtn = () -> {
             newMsgCount[0]++;
-            newMsgBtn.setText(newMsgCount[0] + " 条新消息");
+            newMsgBtn.setText(I18n.get("msg.newMessages", newMsgCount[0]));
             positionNewMsgBtn.run();
             newMsgBtn.setVisible(true);
         };
@@ -331,11 +566,12 @@ public class ClientChat {
             public void intervalRemoved(javax.swing.event.ListDataEvent e) { }
             public void contentsChanged(javax.swing.event.ListDataEvent e) { }
             private void onNewMessage() {
-                if (userScrolledUp[0]) {
+                if (userScrolledUp[0] && !forceScrollOnNext[0]) {
                     SwingUtilities.invokeLater(showNewMsgBtn);
                 } else {
                     SwingUtilities.invokeLater(scrollToBottom);
                 }
+                forceScrollOnNext[0] = false;
             }
         });
 
@@ -343,7 +579,25 @@ public class ClientChat {
             public void componentResized(java.awt.event.ComponentEvent e) { positionNewMsgBtn.run(); }
         });
         SwingUtilities.invokeLater(positionNewMsgBtn);
-        SwingUtilities.invokeLater(scrollToBottom);
+
+        // 初始化界面文案（多语言）；语言切换时由 Settings 回调重新执行
+        applyI18nRef[0] = () -> {
+            clientChat.sendButton.setText(I18n.get("button.send"));
+            clientChat.sendPicturesButton.setText("【图片】");
+            settingsButton.setText(I18n.get("toolbar.settings"));
+            jButton_startServer.setText(startedNickname == null ? I18n.get("toolbar.startServer")
+                    : I18n.get("toolbar.startServer") + ": " + startedNickname);
+            clientChat.serverIPButton.setText(fmtServerButton(currentServer));
+            clientChat.fileShareButton.setText(userSettings.isOnFileSharing()
+                    ? I18n.get("toolbar.fileShare.stop") : I18n.get("toolbar.fileShare"));
+            clientChat.aboutButton.setText(I18n.get("toolbar.about"));
+            copyMsgItem.setText(I18n.get("menu.copyMessage"));
+            cutItem.setText(I18n.get("text.cut"));
+            copyItem.setText(I18n.get("text.copy"));
+            pasteItem.setText(I18n.get("text.paste"));
+            selectAllItem.setText(I18n.get("text.selectAll"));
+        };
+        SwingUtilities.invokeLater(applyI18nRef[0]);
 
 
     }
@@ -357,12 +611,32 @@ public class ClientChat {
             return;
         }
         userSettings.setServerIp(picked.getIp());
+        currentServer = picked;
         if (button != null) {
-            button.setText("服务器: " + picked.toString());
+            button.setText(I18n.get("toolbar.serverIP") + ": " + picked.toString());
         }
         // 注册到服务器（即使UDP丢包，客户端稍后发消息也会再次登记）
         Message join = new Message("JOIN", "", "");
         join.sendJoinRaw(userSettings);
+    }
+
+    private static String fmtServerButton(ServerAnnouncement p) {
+        return (p == null) ? I18n.get("toolbar.serverIP") : I18n.get("toolbar.serverIP") + ": " + p.toString();
+    }
+
+    /** 清理工具栏中多余的分隔符（开头/结尾/连续） */
+    private static void cleanupToolbarSeparators(JToolBar bar) {
+        java.util.List<Integer> toRemove = new java.util.ArrayList<>();
+        int n = bar.getComponentCount();
+        for (int i = 0; i < n; i++) {
+            if (!(bar.getComponent(i) instanceof JSeparator)) continue;
+            boolean prevSep = (i - 1 >= 0) && (bar.getComponent(i - 1) instanceof JSeparator);
+            boolean nextSep = (i + 1 < n) && (bar.getComponent(i + 1) instanceof JSeparator);
+            boolean atEdge = (i == 0) || (i == n - 1);
+            if (prevSep || nextSep || atEdge) toRemove.add(i);
+        }
+        for (int i = toRemove.size() - 1; i >= 0; i--) bar.remove((int) toRemove.get(i));
+        bar.revalidate();
     }
 
     private static void SendMessage(JTextArea jTextArea_message, UserSettings userSettings, ListModel listModel_message) {
@@ -390,10 +664,148 @@ public class ClientChat {
     }
 
     /**
-     * 扫描+选择合并窗口：持续扫描，发现的服务器实时进入列表，
-     * 双击或点“连接”即加入；另提供“手动输入”与“取消”。取消即停止扫描。
+     * 在消息 HTML 渲染结果中，检测鼠标点击点是否落在某个链接上。
+     * 用一个与渲染完全相同的临时 JEditorPane 进行坐标→模型偏移映射，
+     * 再通过文档的元素属性判断该偏移是否位于 <a> 标签内。
      */
-    private static void discoverServer(Component parent, Consumer<ServerAnnouncement> onResult) {
+    private static String findUrlAt(Message m, JList<?> list, Point click, Rectangle cell) {
+        JEditorPane ep = new JEditorPane();
+        ep.setContentType("text/html");
+        ep.setEditable(false);
+        ep.setText(CellRender_Message.toHtml(m, false));
+        // 必须与渲染时相同的宽度，换行才一致，坐标映射才准确
+        ep.setSize(cell.width, Math.max(cell.height, 10));
+        ep.doLayout();
+        try {
+            ep.getUI().getRootView(ep); // 触发视图布局
+        } catch (Exception ignore) { }
+
+        Point p = new Point(click.x - cell.x, click.y - cell.y);
+        int pos = ep.viewToModel(p);
+        if (pos < 0) return null;
+
+        javax.swing.text.Document doc = ep.getDocument();
+        if (!(doc instanceof HTMLDocument)) return null;
+        HTMLDocument htmlDoc = (HTMLDocument) doc;
+        Element elem = htmlDoc.getCharacterElement(pos);
+        if (elem == null) return null;
+        AttributeSet attrs = elem.getAttributes();
+        Object link = attrs.getAttribute(HTML.Tag.A);
+        if (link instanceof AttributeSet) {
+            Object href = ((AttributeSet) link).getAttribute(HTML.Attribute.HREF);
+            if (href instanceof String && !((String) href).isEmpty()) {
+                return (String) href;
+            }
+        }
+        return null;
+    }
+
+    /** 用系统默认浏览器打开链接（自动补全 http:// 前缀） */
+    private static void openInBrowser(String url) {
+        try {
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                url = "http://" + url;
+            }
+            Desktop.getDesktop().browse(new URI(url));
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, "无法打开链接: " + url, "错误", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /** 图片放大预览：下载原图并缩放至适配屏幕后，在可关闭对话框中展示 */
+    private static void openImagePreview(String url) {
+        final JDialog dlg = new JDialog((Frame) null, "图片预览", false);
+        dlg.setLayout(new BorderLayout());
+        final JLabel label = new JLabel("加载中…", SwingConstants.CENTER);
+        dlg.add(new JScrollPane(label), BorderLayout.CENTER);
+        dlg.setSize(420, 320);
+        dlg.setLocationRelativeTo(null);
+        dlg.setVisible(true);
+        new SwingWorker<ImageIcon, Void>() {
+            @Override
+            protected ImageIcon doInBackground() throws Exception {
+                File f = CellRender_Message.getRawSync(url);
+                BufferedImage img = ImageIO.read(f);
+                Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+                int maxW = (int) (screen.width * 0.9);
+                int maxH = (int) (screen.height * 0.9);
+                int w = img.getWidth(), h = img.getHeight();
+                double s = Math.min(Math.min((double) maxW / w, (double) maxH / h), 1.0);
+                Image scaled = img.getScaledInstance((int) (w * s), (int) (h * s), Image.SCALE_SMOOTH);
+                return new ImageIcon(scaled);
+            }
+            @Override
+            protected void done() {
+                try {
+                    ImageIcon ic = get();
+                    label.setIcon(ic);
+                    label.setText(null);
+                    dlg.pack();
+                    dlg.setLocationRelativeTo(null);
+                } catch (Exception ex) {
+                    label.setText("加载失败: " + ex.getMessage());
+                }
+            }
+        }.execute();
+        // 点击预览图任意处关闭
+        label.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) { dlg.dispose(); }
+        });
+    }
+
+    /** 下载文件消息到本地 received 目录，并用系统默认程序打开 */
+    private static void downloadAndOpen(String url) {
+        final File dir = new File(System.getProperty("user.home"), "udpchat_media/received");
+        dir.mkdirs();
+        final String name = CellRender_Message.chatFileName(url);
+        new SwingWorker<File, Void>() {
+            @Override
+            protected File doInBackground() throws Exception {
+                File f = new File(dir, name);
+                try (InputStream in = new URI(url).toURL().openStream();
+                     FileOutputStream out = new FileOutputStream(f)) {
+                    byte[] buf = new byte[8192];
+                    int n;
+                    while ((n = in.read(buf)) > 0) out.write(buf, 0, n);
+                }
+                return f;
+            }
+            @Override
+            protected void done() {
+                try {
+                    File f = get();
+                    Desktop.getDesktop().open(f);
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(null, "打开文件失败: " + ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
+    }
+
+    /** 播放语音：wav 用 javax.sound 内联播放，其它格式回退到浏览器 */
+    private static void playVoice(String url) {
+        if (url.toLowerCase().endsWith(".wav")) {
+            try {
+                AudioInputStream ais = AudioSystem.getAudioInputStream(new URI(url).toURL());
+                Clip clip = AudioSystem.getClip();
+                clip.open(ais);
+                clip.start();
+                clip.addLineListener(event -> {
+                    if (event.getType() == LineEvent.Type.STOP) clip.close();
+                });
+                return;
+            } catch (Exception ex) {
+                // 解析/播放失败，回退到浏览器
+            }
+        }
+        openInBrowser(url);
+    }
+
+    /**
+     * 扫描+选择合并窗口：持续扫描，发现的服务器实时进入列表，
+     * 双击或点“连接”即加入；另提供“启动服务器”“手动输入”与“取消”。取消即停止扫描。
+     */
+    private static void discoverServer(Component parent, Consumer<ServerAnnouncement> onResult, Runnable onStartServer) {
         final List<ServerAnnouncement> found = new ArrayList<>();
         final Set<String> seen = new HashSet<>();
         final DefaultListModel<String> model = new DefaultListModel<>();
@@ -409,9 +821,11 @@ public class ClientChat {
 
         JPanel btns = new JPanel();
         JButton btnConnect = new JButton("连接");
+        JButton btnStartServer = new JButton(I18n.get("toolbar.startServer"));
         JButton btnManual = new JButton("手动输入...");
         JButton btnCancel = new JButton("取消");
         btns.add(btnConnect);
+        btns.add(btnStartServer);
         btns.add(btnManual);
         btns.add(btnCancel);
         dlg.add(btns, BorderLayout.SOUTH);
@@ -474,6 +888,22 @@ public class ClientChat {
             @Override
             public void actionPerformed(ActionEvent e) {
                 pickSelected.run();
+            }
+        });
+
+        btnStartServer.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // 启动本机服务器：停止扫描并关闭窗口，复用主界面的启动逻辑
+                scanning[0] = false;
+                dlg.dispose();
+                if (onStartServer != null) onStartServer.run();
+                // 启动完成后自动连接刚启动的本机服务器
+                String ip = Server.getIpAddress();
+                if (ip != null && onResult != null) {
+                    String nick = (startedNickname != null) ? startedNickname : ip;
+                    onResult.accept(new ServerAnnouncement(ip, "", nick));
+                }
             }
         });
 
@@ -562,8 +992,6 @@ public class ClientChat {
         messageJList = new JList();
         list1 = new JList();
         Jtoolbar = new JToolBar();
-        nicknameButton = new JButton();
-        hideIPButton = new JButton();
         serverIPButton = new JButton();
         fileShareButton = new JButton();
         aboutButton = new JButton();
@@ -586,7 +1014,7 @@ public class ClientChat {
                 null, null, null));
 
             //---- label1 ----
-            label1.setText("\u804a\u5929\u6846");
+            label1.setText(I18n.get("label.chat"));
             panel1.add(label1, new GridConstraints(1, 0, 1, 1,
                 GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE,
                 GridConstraints.SIZEPOLICY_FIXED,
@@ -594,7 +1022,7 @@ public class ClientChat {
                 null, null, null));
 
             //---- label2 ----
-            label2.setText("\u5728\u7ebf\u5217\u8868");
+            label2.setText(I18n.get("label.online"));
             panel1.add(label2, new GridConstraints(1, 1, 1, 1,
                 GridConstraints.ANCHOR_WEST, GridConstraints.FILL_NONE,
                 GridConstraints.SIZEPOLICY_FIXED,
@@ -624,16 +1052,6 @@ public class ClientChat {
             //======== Jtoolbar ========
             {
 
-                //---- nicknameButton ----
-                nicknameButton.setText("Nickname");
-                Jtoolbar.add(nicknameButton);
-                Jtoolbar.addSeparator();
-
-                //---- hideIPButton ----
-                hideIPButton.setText("HideIP");
-                Jtoolbar.add(hideIPButton);
-                Jtoolbar.addSeparator();
-
                 //---- serverIPButton ----
                 serverIPButton.setText("serverIP");
                 Jtoolbar.add(serverIPButton);
@@ -645,7 +1063,7 @@ public class ClientChat {
                 Jtoolbar.addSeparator();
 
                 //---- aboutButton ----
-                aboutButton.setText("About");
+                aboutButton.setText(I18n.get("toolbar.about"));
                 Jtoolbar.add(aboutButton);
             }
             panel1.add(Jtoolbar, new GridConstraints(0, 0, 1, 2,
@@ -670,13 +1088,22 @@ public class ClientChat {
                 GridConstraints.SIZEPOLICY_CAN_GROW | GridConstraints.SIZEPOLICY_WANT_GROW,
                 null, null, null));
 
-            //---- sendPicturesButton ----
-            sendPicturesButton.setText("Send Pictures");
-            panel1.add(sendPicturesButton, new GridConstraints(4, 0, 1, 1,
-                GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
-                GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
-                GridConstraints.SIZEPOLICY_FIXED,
-                null, null, null));
+            // 媒体发送行：图片 / 语音 / 文件，置于输入框上方，符合“【图片】【语音】”要求
+            {
+                sendPicturesButton.setText("【图片】");
+                voiceButton = new JButton("【语音】");
+                sendFileButton = new JButton("【文件】");
+                JPanel mediaPanel = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 6, 2));
+                mediaPanel.setOpaque(false);
+                mediaPanel.add(sendPicturesButton);
+                mediaPanel.add(voiceButton);
+                mediaPanel.add(sendFileButton);
+                panel1.add(mediaPanel, new GridConstraints(4, 0, 1, 2,
+                    GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL,
+                    GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                    GridConstraints.SIZEPOLICY_FIXED,
+                    null, null, null));
+            }
         }
         // JFormDesigner - End of component initialization  //GEN-END:initComponents  @formatter:on
     }
@@ -688,14 +1115,14 @@ public class ClientChat {
     private JList messageJList;
     private JList list1;
     private JToolBar Jtoolbar;
-    private JButton nicknameButton;
-    private JButton hideIPButton;
     private JButton serverIPButton;
     private JButton fileShareButton;
     private JButton aboutButton;
     private JScrollPane jscrollpane_message;
     private JTextArea textArea_message;
     private JButton sendPicturesButton;
+    private JButton voiceButton;
+    private JButton sendFileButton;
     // JFormDesigner - End of variables declaration  //GEN-END:variables  @formatter:on
 }
 

@@ -114,9 +114,9 @@ public class ClientChatReceiveThread implements Runnable {
                         ((DefaultListModel) listModel).addElement(message.getFromIp());
                     }
 
-                    //只显示有内容的聊天消息（过滤控制/空白报文）
+                    //只显示有内容的聊天消息（过滤控制/空白报文，含纯空白内容）
                     if (message.getContent() != null
-                            && !message.getContent().isEmpty()) {
+                            && !message.getContent().trim().isEmpty()) {
                         ((DefaultListModel) listModel_message).addElement(message);
                     }
 

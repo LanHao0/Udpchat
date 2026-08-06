@@ -52,6 +52,12 @@ public class App extends NanoHTTPD {
     public Response serve(IHTTPSession session){
         Map<String, String> parms = session.getParms();
         String msg = "";
+
+        // ===== 聊天媒体（语音/图片）：免密、仅限媒体目录，局域网内直接访问 =====
+        if (parms.get("chatfile") != null) {
+            return serveChatFile(parms.get("chatfile"));
+        }
+
         if (parms.get("getAssets")!=null){
             String asset=parms.get("getAssets");
             msg=new MyFile().getResString(asset);
@@ -251,6 +257,38 @@ public class App extends NanoHTTPD {
         msg=new MyFile().getResString("index.html");
         msg=msg.replace("replace_pass",webpassword);
         return newFixedLengthResponse(msg);
+    }
+
+    /**
+     * 聊天媒体文件服务：从媒体目录返回文件字节（免密），用于语音/图片消息。
+     * 文件名做了防路径穿越处理（只取文件名部分）。
+     */
+    private Response serveChatFile(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return newFixedLengthResponse(Response.Status.BAD_REQUEST, "text/plain", "missing");
+        }
+        File file = new File(App.getMediaDir(), new File(name).getName());
+        if (!file.exists() || !file.isFile()) {
+            return newFixedLengthResponse(Response.Status.NOT_FOUND, "text/plain", "not found");
+        }
+        try {
+            FileInputStream fis = new FileInputStream(file);
+            String mime = mimeFor(file.getName());
+            Response r = newFixedLengthResponse(Response.Status.OK, mime, fis, fis.getChannel().size());
+            r.addHeader("Content-Disposition", "inline; filename=\"" + URLEncoder.encode(file.getName(), "UTF-8") + "\"");
+            // 关闭 keep-alive，避免浏览器复用连接导致下载到错误响应
+            r.addHeader("Connection", "close");
+            return r;
+        } catch (Exception e) {
+            return newFixedLengthResponse(Response.Status.INTERNAL_ERROR, "text/plain", e.toString());
+        }
+    }
+
+    /** 聊天媒体目录（用户主目录下 udpchat_media），不存在则创建 */
+    public static File getMediaDir() {
+        File dir = new File(System.getProperty("user.home"), "udpchat_media");
+        if (!dir.exists()) dir.mkdirs();
+        return dir;
     }
 
     private String mimeFor(String name){

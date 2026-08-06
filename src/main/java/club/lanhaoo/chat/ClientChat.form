@@ -70,26 +70,6 @@
         <properties/>
         <border type="none"/>
         <children>
-          <component id="8e072" class="javax.swing.JButton" binding="nicknameButton" default-binding="true">
-            <constraints/>
-            <properties>
-              <text value="Nickname"/>
-            </properties>
-          </component>
-          <component id="1041d" class="javax.swing.JToolBar$Separator">
-            <constraints/>
-            <properties/>
-          </component>
-          <component id="ccdce" class="javax.swing.JButton" binding="hideIPButton" default-binding="true">
-            <constraints/>
-            <properties>
-              <text value="HideIP"/>
-            </properties>
-          </component>
-          <component id="98285" class="javax.swing.JToolBar$Separator">
-            <constraints/>
-            <properties/>
-          </component>
           <component id="510d6" class="javax.swing.JButton" binding="serverIPButton" default-binding="true">
             <constraints/>
             <properties>

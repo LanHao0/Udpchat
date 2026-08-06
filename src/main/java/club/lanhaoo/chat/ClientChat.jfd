@@ -73,30 +73,10 @@ new FormModel {
 			} )
 			add( new FormContainer( "javax.swing.JToolBar", new FormLayoutManager( class javax.swing.JToolBar ) ) {
 				name: "Jtoolbar"
-				add( new FormComponent( "javax.swing.JButton" ) {
-					name: "nicknameButton"
-					"text": "Nickname"
-				} )
-				add( new FormComponent( "javax.swing.JToolBar$Separator" ) {
-					name: "separator1"
-					auxiliary() {
-						"JavaCodeGenerator.variableLocal": true
-					}
-				} )
-				add( new FormComponent( "javax.swing.JButton" ) {
-					name: "hideIPButton"
-					"text": "HideIP"
-				} )
-				add( new FormComponent( "javax.swing.JToolBar$Separator" ) {
-					name: "separator2"
-					auxiliary() {
-						"JavaCodeGenerator.variableLocal": true
-					}
-				} )
-				add( new FormComponent( "javax.swing.JButton" ) {
-					name: "serverIPButton"
-					"text": "serverIP"
-				} )
+			add( new FormComponent( "javax.swing.JButton" ) {
+				name: "serverIPButton"
+				"text": "serverIP"
+			} )
 				add( new FormComponent( "javax.swing.JToolBar$Separator" ) {
 					name: "separator3"
 					auxiliary() {

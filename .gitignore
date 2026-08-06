@@ -20,3 +20,9 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
+.codex
+.codebuddy
+lib
+*.jar
+*.cmd
+*.sh
