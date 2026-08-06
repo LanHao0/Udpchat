@@ -301,12 +301,12 @@ public class ClientChat {
                 try {
                     File wav = recorder[0].stop();
                     recorder[0] = null;
-                    clientChat.voiceButton.setText("【语音】");
+                    clientChat.voiceButton.setText("语音");
                     sendMediaFile.accept(wav);
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     recorder[0] = null;
-                    clientChat.voiceButton.setText("【语音】");
+                    clientChat.voiceButton.setText("语音");
                 }
             }
         });
@@ -377,8 +377,18 @@ public class ClientChat {
         jList_Message.setCellRenderer(listCellRenderer);
         // 图片下载生成缩略图后，请求列表重绘以把图片内联显示出来（并重新计算行高）
         CellRender_Message.setRepaintCallback(() -> {
-            jList_Message.revalidate();
-            jList_Message.repaint();
+            SwingUtilities.invokeLater(() -> {
+                // 仅 revalidate/repaint 不足以让 JList 刷新缓存的“可变单元格高度”，
+                // 必须触发一次 model 事件才会重新测量对应行（新消息到达时之所以能正常展开，正是因为它触发了 model 事件）。
+                // DefaultListModel.set(index, element) 内部会 fireContentsChanged，从而强制 JList 重新测量该图片行的高。
+                DefaultListModel model = (DefaultListModel) jList_Message.getModel();
+                for (int i = model.getSize() - 1; i >= 0; i--) {
+                    Object o = model.getElementAt(i);
+                    if (o instanceof Message && "image".equals(((Message) o).getMediaType())) {
+                        model.set(i, (Message) o);
+                    }
+                }
+            });
         });
         // 聊天区使用柔和背景，配合气泡更清爽
         jList_Message.setBackground(new Color(0xf5f6f8));
@@ -583,7 +593,7 @@ public class ClientChat {
         // 初始化界面文案（多语言）；语言切换时由 Settings 回调重新执行
         applyI18nRef[0] = () -> {
             clientChat.sendButton.setText(I18n.get("button.send"));
-            clientChat.sendPicturesButton.setText("【图片】");
+            clientChat.sendPicturesButton.setText("图片");
             settingsButton.setText(I18n.get("toolbar.settings"));
             jButton_startServer.setText(startedNickname == null ? I18n.get("toolbar.startServer")
                     : I18n.get("toolbar.startServer") + ": " + startedNickname);
@@ -1088,11 +1098,11 @@ public class ClientChat {
                 GridConstraints.SIZEPOLICY_CAN_GROW | GridConstraints.SIZEPOLICY_WANT_GROW,
                 null, null, null));
 
-            // 媒体发送行：图片 / 语音 / 文件，置于输入框上方，符合“【图片】【语音】”要求
+            // 媒体发送行：图片 / 语音 / 文件，置于输入框上方
             {
-                sendPicturesButton.setText("【图片】");
-                voiceButton = new JButton("【语音】");
-                sendFileButton = new JButton("【文件】");
+                sendPicturesButton.setText("图片");
+                voiceButton = new JButton("语音");
+                sendFileButton = new JButton("文件");
                 JPanel mediaPanel = new JPanel(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT, 6, 2));
                 mediaPanel.setOpaque(false);
                 mediaPanel.add(sendPicturesButton);
