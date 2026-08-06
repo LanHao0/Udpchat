@@ -390,6 +390,8 @@ public class ClientChat {
                 }
             });
         });
+        // 语音播放进度刷新：仅做轻量重绘（高度不变，无需重排行高）
+        CellRender_Message.setProgressRepaint(() -> jList_Message.repaint());
         // 聊天区使用柔和背景，配合气泡更清爽
         jList_Message.setBackground(new Color(0xf5f6f8));
         jList_Message.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
@@ -452,17 +454,16 @@ public class ClientChat {
                 Rectangle cell = jList_Message.getCellBounds(idx, idx);
                 if (cell == null || !cell.contains(e.getPoint())) return;
                 Message m = (Message) jList_Message.getModel().getElementAt(idx);
-                String url = findUrlAt(m, jList_Message, e.getPoint(), cell);
-                if (url != null) {
-                    if ("voice".equals(m.getMediaType())) {
-                        playVoice(url);
-                    } else if ("image".equals(m.getMediaType())) {
-                        openImagePreview(url);
-                    } else if ("file".equals(m.getMediaType())) {
-                        downloadAndOpen(url);
-                    } else {
-                        openInBrowser(url);
-                    }
+                String url = m.getContent();
+                if ("voice".equals(m.getMediaType())) {
+                    CellRender_Message.togglePlay(url);
+                } else if ("image".equals(m.getMediaType())) {
+                    openImagePreview(url);
+                } else if ("file".equals(m.getMediaType())) {
+                    downloadAndOpen(url);
+                } else {
+                    String link = findUrlAt(m, jList_Message, e.getPoint(), cell);
+                    if (link != null) openInBrowser(link);
                 }
             }
         });
@@ -572,7 +573,22 @@ public class ClientChat {
         });
 
         ((DefaultListModel) listModel_message).addListDataListener(new javax.swing.event.ListDataListener() {
-            public void intervalAdded(javax.swing.event.ListDataEvent e) { onNewMessage(); }
+            public void intervalAdded(javax.swing.event.ListDataEvent e) {
+                // 记录每条“收发”消息（文本 + 图片/语音/文件等多媒体）到 logs/ 按日期的 JSON 文本
+                for (int i = e.getIndex0(); i <= e.getIndex1(); i++) {
+                    Object o = listModel_message.getElementAt(i);
+                    if (o instanceof Message) {
+                        Message mm = (Message) o;
+                        boolean isChat = "CHAT".equals(mm.getType()) || mm.getMediaType() != null;
+                        if (isChat) {
+                            String dir = (mm.getFromIp() != null && mm.getFromIp().equals(Server.getIpAddress()))
+                                    ? "sent" : "received";
+                            club.lanhaoo.chat.Classes.MessageLogger.log(mm, dir);
+                        }
+                    }
+                }
+                onNewMessage();
+            }
             public void intervalRemoved(javax.swing.event.ListDataEvent e) { }
             public void contentsChanged(javax.swing.event.ListDataEvent e) { }
             private void onNewMessage() {
@@ -790,25 +806,6 @@ public class ClientChat {
                 }
             }
         }.execute();
-    }
-
-    /** 播放语音：wav 用 javax.sound 内联播放，其它格式回退到浏览器 */
-    private static void playVoice(String url) {
-        if (url.toLowerCase().endsWith(".wav")) {
-            try {
-                AudioInputStream ais = AudioSystem.getAudioInputStream(new URI(url).toURL());
-                Clip clip = AudioSystem.getClip();
-                clip.open(ais);
-                clip.start();
-                clip.addLineListener(event -> {
-                    if (event.getType() == LineEvent.Type.STOP) clip.close();
-                });
-                return;
-            } catch (Exception ex) {
-                // 解析/播放失败，回退到浏览器
-            }
-        }
-        openInBrowser(url);
     }
 
     /**
