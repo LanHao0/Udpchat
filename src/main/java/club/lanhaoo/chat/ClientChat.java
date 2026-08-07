@@ -10,13 +10,12 @@ package club.lanhaoo.chat;
 
 import club.lanhaoo.chat.Classes.Message;
 import club.lanhaoo.chat.Classes.ServerAnnouncement;
+import club.lanhaoo.chat.Classes.ThemeUtil;
 import club.lanhaoo.chat.Classes.UI.CellRender_Message;
 import club.lanhaoo.chat.Classes.UI.ImageFilter;
 import club.lanhaoo.chat.Classes.UserSettings;
 import club.lanhaoo.chat.HttpFileShare.App;
 import club.lanhaoo.chat.Classes.VoiceRecorder;
-import com.formdev.flatlaf.FlatLightLaf;
-import com.formdev.flatlaf.themes.FlatMacLightLaf;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import fi.iki.elonen.NanoHTTPD;
@@ -65,7 +64,6 @@ public class ClientChat {
     private static String startedNickname;
 
     public ClientChat() {
-        FlatMacLightLaf.setup();
         initComponents();
     }
 
@@ -76,9 +74,13 @@ public class ClientChat {
         final UserSettings userSettings = new UserSettings();
         userSettings.load();
         I18n.setLanguage(userSettings.getLanguage());
+        // 在构建任何 Swing 组件前安装主题（浅色/深色），否则需要重建界面才能生效
+        ThemeUtil.applyTheme(userSettings.getTheme());
 
         // 界面文案刷新回调（在组件创建完成后赋值，详见下方 applyI18nRef[0] = ...）
         final Runnable[] applyI18nRef = {null};
+        // 主题切换回调（组件创建完成后赋值）：切换 L&F 后刷新已打开窗口与消息列表
+        final Runnable[] onThemeChangedRef = {null};
         // 发送消息后，强制把消息列表滚到最底部（无视用户是否曾上滑看历史）
         final boolean[] forceScrollOnNext = {false};
 
@@ -92,7 +94,7 @@ public class ClientChat {
         // 输入框：浅色圆角边框 + 内边距 + 统一字体，整体更整洁
         jTextArea_message.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
         jTextArea_message.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(0xd0d4d9), 1, true),
+                BorderFactory.createLineBorder(ThemeUtil.inputBorder(), 1, true),
                 BorderFactory.createEmptyBorder(6, 8, 6, 8)));
 
 
@@ -121,7 +123,8 @@ public class ClientChat {
                 Settings.openWindow(userSettings, listModel_message,
                         () -> SwingUtilities.invokeLater(() -> {
                             if (applyI18nRef[0] != null) applyI18nRef[0].run();
-                        }));
+                        }),
+                        onThemeChangedRef[0]);
             }
         });
 
@@ -392,8 +395,8 @@ public class ClientChat {
         });
         // 语音播放进度刷新：仅做轻量重绘（高度不变，无需重排行高）
         CellRender_Message.setProgressRepaint(() -> jList_Message.repaint());
-        // 聊天区使用柔和背景，配合气泡更清爽
-        jList_Message.setBackground(new Color(0xf5f6f8));
+        // 聊天区使用柔和背景，配合气泡更清爽（随主题变化）
+        jList_Message.setBackground(ThemeUtil.chatBg());
         jList_Message.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
 
         // ====== 消息列表：右键复制消息 / 放大预览 ======
@@ -497,10 +500,23 @@ public class ClientChat {
         final JList jList_iplist = clientChat.list1;
         final ListModel listModel_ip = new DefaultListModel();
         jList_iplist.setModel(listModel_ip);
-        jList_iplist.setBackground(new Color(0xf5f6f8));
+        jList_iplist.setBackground(ThemeUtil.chatBg());
         jList_iplist.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 13));
         jList_iplist.setFixedCellHeight(26);
         //设置list模型
+
+        // 主题切换后：刷新所有已打开窗口的 L&F，并重新应用受主题影响的自定义颜色与消息列表配色
+        onThemeChangedRef[0] = () -> {
+            SwingUtilities.updateComponentTreeUI(frame);
+            // updateComponentTreeUI 会把边框/背景重置为 L&F 默认，因此需重新应用我们的自定义配色
+            jTextArea_message.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(ThemeUtil.inputBorder(), 1, true),
+                    BorderFactory.createEmptyBorder(6, 8, 6, 8)));
+            jList_Message.setBackground(ThemeUtil.chatBg());
+            jList_iplist.setBackground(ThemeUtil.chatBg());
+            jList_Message.repaint();
+            jList_iplist.repaint();
+        };
 
         jList_iplist.addMouseListener(new MouseAdapter() {
             @Override

@@ -7,6 +7,8 @@
 
 package club.lanhaoo.chat.Classes;
 
+import club.lanhaoo.chat.Classes.ThemeUtil;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -20,6 +22,7 @@ public class UserSettings {
     private boolean onFileSharing = false;
     private String ServerIp;
     private String language = "zh"; // "zh" 或 "en"
+    private String theme = ThemeUtil.THEME_LIGHT; // "light" 或 "dark"
 
     private static final String SETTINGS_FILE = "udpchat_user.properties";
 
@@ -63,6 +66,14 @@ public class UserSettings {
         this.language = (language == null) ? "zh" : language;
     }
 
+    public String getTheme() {
+        return theme;
+    }
+
+    public void setTheme(String theme) {
+        this.theme = (theme == null) ? ThemeUtil.THEME_LIGHT : theme;
+    }
+
     /** 从工作目录的配置文件载入用户设置（昵称、隐藏IP、语言、服务器地址） */
     public void load() {
         try {
@@ -76,6 +87,7 @@ public class UserSettings {
             UserName = (u == null || u.isEmpty()) ? null : u;
             HidemyIp = Boolean.parseBoolean(p.getProperty("hidemyip", "false"));
             language = p.getProperty("language", "zh");
+            theme = p.getProperty("theme", ThemeUtil.THEME_LIGHT);
             ServerIp = p.getProperty("serverip", "");
         } catch (Exception ignore) {
         }
@@ -88,6 +100,7 @@ public class UserSettings {
             p.setProperty("username", UserName == null ? "" : UserName);
             p.setProperty("hidemyip", String.valueOf(HidemyIp));
             p.setProperty("language", language == null ? "zh" : language);
+            p.setProperty("theme", theme == null ? ThemeUtil.THEME_LIGHT : theme);
             p.setProperty("serverip", ServerIp == null ? "" : ServerIp);
             try (OutputStream os = new FileOutputStream(SETTINGS_FILE)) {
                 p.store(os, "udpchat user settings");

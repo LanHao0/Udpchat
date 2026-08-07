@@ -8,6 +8,7 @@
 package club.lanhaoo.chat.Classes.UI;
 
 import club.lanhaoo.chat.Classes.Message;
+import club.lanhaoo.chat.Classes.ThemeUtil;
 import club.lanhaoo.chat.Server;
 
 import javax.imageio.ImageIO;
@@ -34,9 +35,6 @@ import java.util.regex.Pattern;
  * 配合 ClientChat 中的点击命中检测即可“点击打开”。
  */
 public class CellRender_Message extends JEditorPane implements ListCellRenderer {
-
-    // 聊天区柔和背景，与气泡形成对比
-    private static final Color CHAT_BG = new Color(0xf5f6f8);
 
     // 用于把链接文本替换成 <a> 标签的正则：
     // 1) http(s):// 或 www. 开头；2) 纯 IPv4（可选端口），如文件分享地址 192.168.1.5:8089
@@ -171,14 +169,7 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
         return raw;
     }
 
-    // ====== 气泡配色（现代化）======
-    private static final Color OWN_BG = Color.decode("#d6ecff");
-    private static final Color OWN_BORDER = Color.decode("#a9d4f5");
-    private static final Color OTHER_BG = Color.decode("#dcf5e3");
-    private static final Color OTHER_BORDER = Color.decode("#a9dcb8");
-    private static final Color OWN_SENDER = Color.decode("#0b6cb5");
-    private static final Color OTHER_SENDER = Color.decode("#1b8a4b");
-    private static final Color TIME_COLOR = Color.decode("#9aa0a6");
+    // ====== 气泡配色（现代化，随主题动态变化，见 ThemeUtil）======
     private static final int BUBBLE_RADIUS = 12;
 
     // ====== 语音消息：本地缓存 + 波形/时长解析 + 播放控制 ======
@@ -423,7 +414,7 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
     private static JLabel timeLabel(long ts) {
         JLabel l = new JLabel(fmtTime(ts));
         l.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
-        l.setForeground(TIME_COLOR);
+        l.setForeground(ThemeUtil.timeColor());
         l.setAlignmentX(RIGHT_ALIGNMENT);
         return l;
     }
@@ -431,23 +422,24 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
     private static String timeDivHtml(Message m) {
         String t = fmtTime(m.getTimestamp());
         if (t.isEmpty()) return "";
-        return "<div style='text-align:right;color:#9aa0a6;font-size:10px;margin-top:2px;'>"
+        return "<div style='text-align:right;color:" + ThemeUtil.hex(ThemeUtil.timeColor())
+                + ";font-size:10px;margin-top:2px;'>"
                 + escapeHtml(t) + "</div>";
     }
 
     // ====== 语音消息组件（播放按钮 + 波形 + 剩余秒数）======
     private Component buildVoiceComponent(Message m, JList list, boolean selected) {
         boolean own = m.getFromIp() != null && m.getFromIp().equals(Server.getIpAddress());
-        Color bg = own ? OWN_BG : OTHER_BG;
-        Color border = own ? OWN_BORDER : OTHER_BORDER;
-        Color senderColor = own ? OWN_SENDER : OTHER_SENDER;
+        Color bg = own ? ThemeUtil.ownBg() : ThemeUtil.otherBg();
+        Color border = own ? ThemeUtil.ownBorder() : ThemeUtil.otherBorder();
+        Color senderColor = own ? ThemeUtil.ownSender() : ThemeUtil.otherSender();
         String sender = (m.getSender() != null) ? m.getSender() : m.getFromIp();
         if (sender == null) sender = "";
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setOpaque(true);
-        panel.setBackground(CHAT_BG);
+        panel.setBackground(ThemeUtil.chatBg());
         int w = list.getWidth();
         if (w <= 0) w = 200;
         panel.setSize(w, 1);
@@ -474,9 +466,9 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
 
         JLabel playBtn = new JLabel(playing ? "⏸" : "▶");
         playBtn.setFont(new Font("Dialog", Font.PLAIN, 16));
-        playBtn.setBorder(BorderFactory.createLineBorder(new Color(0xcccccc)));
+        playBtn.setBorder(BorderFactory.createLineBorder(ThemeUtil.voiceBtnBorder()));
         playBtn.setOpaque(true);
-        playBtn.setBackground(Color.WHITE);
+        playBtn.setBackground(ThemeUtil.voiceBtnBg());
         playBtn.setHorizontalAlignment(SwingConstants.CENTER);
         playBtn.setPreferredSize(new Dimension(30, 30));
         playBtn.setMaximumSize(new Dimension(30, 30));
@@ -489,7 +481,7 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
 
         JLabel timeLbl = new JLabel(fmtVoiceTime(dur, pos, playing));
         timeLbl.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 11));
-        timeLbl.setForeground(TIME_COLOR);
+        timeLbl.setForeground(ThemeUtil.timeColor());
         row.add(timeLbl);
 
         bubble.add(row);
@@ -520,7 +512,7 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
             long duration = (dur > 0) ? dur : (playing ? Math.max(pos, 1) : 1);
             double progress = (duration > 0 && pos > 0) ? Math.min(1.0, pos / (double) duration) : 0.0;
             int playedX = (int) (progress * w);
-            Color playedColor = own ? OWN_SENDER : OTHER_SENDER;
+            Color playedColor = own ? ThemeUtil.ownSender() : ThemeUtil.otherSender();
             for (int i = 0; i < n; i++) {
                 int ph = (peaks != null) ? peaks[i] : 140;
                 int bh = (int) (h * ph / 1000.0);
@@ -528,7 +520,7 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
                 int x = i * (bw + gap);
                 int y = (h - bh) / 2;
                 boolean played = x < playedX;
-                g.setColor(played ? playedColor : new Color(0xbcd2e0));
+                g.setColor(played ? playedColor : ThemeUtil.waveUnplayed());
                 g.fillRect(x, y, bw, bh);
             }
             if (playing && progress > 0) {
@@ -554,7 +546,7 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
         setContentType("text/html");
         setEditable(false);
         setOpaque(true);
-        setBackground(CHAT_BG);
+        setBackground(ThemeUtil.chatBg());
         // 设定宽度，确保按列宽正确换行，从而计算正确的单元格高度（变高）
         int w = list.getWidth();
         if (w <= 0) w = 200;
@@ -569,16 +561,16 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
      */
     private Component buildImageComponent(Message m, JList list, boolean selected) {
         boolean own = m.getFromIp() != null && m.getFromIp().equals(Server.getIpAddress());
-        Color bg = own ? OWN_BG : OTHER_BG;
-        Color border = own ? OWN_BORDER : OTHER_BORDER;
-        Color senderColor = own ? OWN_SENDER : OTHER_SENDER;
+        Color bg = own ? ThemeUtil.ownBg() : ThemeUtil.otherBg();
+        Color border = own ? ThemeUtil.ownBorder() : ThemeUtil.otherBorder();
+        Color senderColor = own ? ThemeUtil.ownSender() : ThemeUtil.otherSender();
         String sender = (m.getSender() != null) ? m.getSender() : m.getFromIp();
         if (sender == null) sender = "";
 
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setOpaque(true);
-        panel.setBackground(CHAT_BG);
+        panel.setBackground(ThemeUtil.chatBg());
         int w = list.getWidth();
         if (w <= 0) w = 200;
         panel.setSize(w, 1);
@@ -601,7 +593,7 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
                 int dw = Math.min(iw, maxW);
                 int dh = (int) Math.round(ih * (dw / (double) iw));
                 JLabel imgLbl = new JLabel(new ImageIcon(bi.getScaledInstance(dw, dh, Image.SCALE_SMOOTH)));
-                imgLbl.setBorder(BorderFactory.createLineBorder(new Color(0xdddddd)));
+                imgLbl.setBorder(BorderFactory.createLineBorder(ThemeUtil.imageBorder()));
                 bubble.add(imgLbl);
             } catch (Exception ex) {
                 bubble.add(new JLabel("图片加载失败"));
@@ -611,7 +603,7 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
         }
         JLabel hint = new JLabel("点击 / 右键放大");
         hint.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 10));
-        hint.setForeground(TIME_COLOR);
+        hint.setForeground(ThemeUtil.hintColor());
         bubble.add(hint);
         bubble.add(timeLabel(m.getTimestamp()));
         panel.add(bubble);
@@ -657,16 +649,20 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
         // 系统/本地提示消息（如“已开启服务器”）：居中、弱化显示，链接可点击
         if ("local".equals(m.getType())) {
             return "<html><body style='margin:0;padding:4px 8px;text-align:center;"
-                    + "color:#9aa0a6;font-size:11px;'>"
+                    + "color:" + ThemeUtil.hex(ThemeUtil.timeColor()) + ";font-size:11px;'>"
                     + linkify(escapeHtml(content)) + "</body></html>";
         }
 
         // 自己的消息靠右、蓝色调；他人消息靠左、绿色调（现代化）
         boolean own = m.getFromIp() != null && m.getFromIp().equals(Server.getIpAddress());
-        String bubbleBg = own ? "#d6ecff" : "#dcf5e3";
-        String borderColor = own ? "#a9d4f5" : "#a9dcb8";
+        String bubbleBg = ThemeUtil.hex(own ? ThemeUtil.ownBg() : ThemeUtil.otherBg());
+        String borderColor = ThemeUtil.hex(own ? ThemeUtil.ownBorder() : ThemeUtil.otherBorder());
         String align = own ? "right" : "left";
-        String senderColor = own ? "#0b6cb5" : "#1b8a4b";
+        String senderColor = ThemeUtil.hex(own ? ThemeUtil.ownSender() : ThemeUtil.otherSender());
+        String bubbleText = ThemeUtil.hex(ThemeUtil.bubbleText());
+        String linkColor = ThemeUtil.hex(ThemeUtil.linkColor());
+        String imgBorder = ThemeUtil.hex(ThemeUtil.imageBorder());
+        String hintColor = ThemeUtil.hex(ThemeUtil.hintColor());
 
         // 媒体消息（语音/图片/文件）：语音渲染为可点击链接，图片直接内联显示缩略图，文件渲染为下载链接
         String media = m.getMediaType();
@@ -679,13 +675,13 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
             sbm.append("<div style='width:82%; background:").append(bubbleBg)
                     .append("; border:1px solid ").append(borderColor)
                     .append("; margin:2px 0; text-align:left; border-radius:12px;")
-                    .append(" font-family:Microsoft YaHei,SimSun,sans-serif; font-size:12px; color:#222;'>");
+                    .append(" font-family:Microsoft YaHei,SimSun,sans-serif; font-size:12px; color:").append(bubbleText).append(";'>");
             sbm.append("<div style='color:").append(senderColor)
                     .append("; font-weight:bold; font-size:11px; margin-bottom:2px;'>")
                     .append(escapeHtml(sender)).append("</div>");
             if ("voice".equals(media)) {
                 sbm.append("<div><a href=\"").append(href)
-                        .append("\" style=\"color:#1565c0;text-decoration:underline;\">")
+                        .append("\" style=\"color:").append(linkColor).append(";text-decoration:underline;\">")
                         .append("🔊 语音消息 · 点击播放</a></div>");
             } else if ("image".equals(media)) {
                 File thumb = getThumb(content);
@@ -695,18 +691,18 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
                     sbm.append("<div style='text-align:center;'><a href=\"").append(href)
                             .append("\"><img src=\"file:///").append(escapeHtml(thumb.getAbsolutePath().replace('\\', '/')))
                             .append("\" width=\"").append(dim[0]).append("\" height=\"").append(dim[1])
-                            .append("\" style=\"border:1px solid #ddd;border-radius:4px;\"></a></div>");
-                    sbm.append("<div style='color:#888;font-size:10px;text-align:center;'>点击 / 右键放大</div>");
+                            .append("\" style=\"border:1px solid ").append(imgBorder).append(";border-radius:4px;\"></a></div>");
+                    sbm.append("<div style='color:").append(hintColor).append(";font-size:10px;text-align:center;'>点击 / 右键放大</div>");
                 } else {
                     sbm.append("<div><a href=\"").append(href)
-                            .append("\" style=\"color:#1565c0;text-decoration:underline;\">")
+                            .append("\" style=\"color:").append(linkColor).append(";text-decoration:underline;\">")
                             .append("🖼️ 图片 · 加载中…</a></div>");
                 }
             } else {
                 // 文件消息：可点击下载并在本地打开
                 String fname = escapeHtml(chatFileName(content));
                 sbm.append("<div><a href=\"").append(href)
-                        .append("\" style=\"color:#1565c0;text-decoration:underline;\">")
+                        .append("\" style=\"color:").append(linkColor).append(";text-decoration:underline;\">")
                         .append("📎 ").append(fname).append(" · 点击下载</a></div>");
             }
             sbm.append(timeDivHtml(m));
@@ -723,7 +719,7 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
         sb.append("<div style='width:82%; background:").append(bubbleBg)
                 .append("; border:1px solid ").append(borderColor)
                 .append("; margin:2px 0; text-align:left; border-radius:12px;")
-                .append(" font-family:Microsoft YaHei,SimSun,sans-serif; font-size:12px; color:#222;'>");
+                .append(" font-family:Microsoft YaHei,SimSun,sans-serif; font-size:12px; color:").append(bubbleText).append(";'>");
         sb.append("<div style='color:").append(senderColor)
                 .append("; font-weight:bold; font-size:11px; margin-bottom:2px;'>")
                 .append(escapeHtml(sender)).append("</div>");
@@ -761,7 +757,7 @@ public class CellRender_Message extends JEditorPane implements ListCellRenderer 
             }
             // $ 在替换串里有特殊含义，用 Matcher.quoteReplacement 包裹
             String replacement = "<a href=\"" + href +
-                    "\" style=\"color:#1565c0;text-decoration:underline;\">" + url + "</a>";
+                    "\" style=\"color:" + ThemeUtil.hex(ThemeUtil.linkColor()) + ";text-decoration:underline;\">" + url + "</a>";
             mt.appendReplacement(out, Matcher.quoteReplacement(replacement));
         }
         mt.appendTail(out);
