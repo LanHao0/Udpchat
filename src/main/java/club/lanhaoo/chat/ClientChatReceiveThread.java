@@ -7,7 +7,9 @@
 
 package club.lanhaoo.chat;
 
+import club.lanhaoo.chat.Classes.GlobalThings;
 import club.lanhaoo.chat.Classes.Message;
+import club.lanhaoo.chat.Classes.UserSettings;
 import com.google.gson.Gson;
 
 import javax.swing.*;
@@ -23,15 +25,17 @@ public class ClientChatReceiveThread implements Runnable {
     private ArrayList<String> arrayList;
     private ListModel listModel;
     private ListModel listModel_message;
+    private UserSettings userSettings;
 
 
     public ClientChatReceiveThread(JScrollBar jScrollBar,
                                    ListModel listModel,
-                                   ListModel listModel_message) {
+                                   ListModel listModel_message,UserSettings userSettings) {
         this.jScrollBar = jScrollBar;
         this.arrayList = new ArrayList<String>();
         this.listModel = listModel;
         this.listModel_message = listModel_message;
+        this.userSettings = userSettings;
 
     }
 
@@ -44,22 +48,79 @@ public class ClientChatReceiveThread implements Runnable {
 
             while (true) {
                 datagramSocket.receive(datagramPacket);
-                //todo 接受到的消息都是来自服务端的。。。。
-
                 String message_pure = new String(datagramPacket.getData(), 0, datagramPacket.getLength(), StandardCharsets.UTF_8);
 
                 Gson gson = new Gson();
                 Message message = gson.fromJson(message_pure, Message.class);
+                System.out.println(message_pure);
+                if (message == null) {
+                    //丢弃无法解析的报文
+                    continue;
+                }
+                //ACK确认
+                if("ACK".equals(message.getType())){
+                    System.out.println(
+                            "收到ACK:"
+                                    + message.getContent()
+                    );
+                    GlobalThings.confirmIds.add(
+                            message.getContent()
+                    );
+                    continue;
 
-                if (!arrayList.contains(message.getFromIp())) {
-                    arrayList.add(message.getFromIp());
-                    ((DefaultListModel)listModel).addElement(message.getFromIp());
                 }
 
-                ((DefaultListModel)listModel_message).addElement(message);
-                //自动下滚
-                jScrollBar.validate();
-                jScrollBar.setValue(jScrollBar.getMaximum());
+                //JOIN 等控制消息不显示（避免空白处/在线列表出现 null）
+                if("JOIN".equals(message.getType())){
+                    continue;
+                }
+
+                String messageId = message.getMessageId();
+
+                Message ack =
+                        new Message(
+                                "ACK",
+                                "",
+                                message.getMessageId()
+                        );
+
+                ack.send(userSettings);
+                if(messageId!=null){
+
+
+                    if(GlobalThings.receivedIds.contains(messageId)){
+
+
+                        System.out.println(
+                                "重复消息:"
+                                        + messageId
+                        );
+
+
+                        continue;
+
+                    }
+
+
+                    GlobalThings.receivedIds.add(messageId);
+
+                }
+
+                SwingUtilities.invokeLater(() -> {
+
+                    if (message.getFromIp() != null
+                            && !arrayList.contains(message.getFromIp())) {
+                        arrayList.add(message.getFromIp());
+                        ((DefaultListModel) listModel).addElement(message.getFromIp());
+                    }
+
+                    //只显示有内容的聊天消息（过滤控制/空白报文，含纯空白内容）
+                    if (message.getContent() != null
+                            && !message.getContent().trim().isEmpty()) {
+                        ((DefaultListModel) listModel_message).addElement(message);
+                    }
+
+                });
 
             }
         } catch (IOException e) {

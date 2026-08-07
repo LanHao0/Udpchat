@@ -7,134 +7,455 @@
 
 package club.lanhaoo.chat.Classes;
 
-import com.google.gson.Gson;
 
-import java.io.IOException;
-import java.net.*;
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.UUID;
+
+
+/**
+ * 消息协议
+ *
+ * messageId:
+ *      每条消息唯一编号，用于UDP ACK确认
+ *
+ * type:
+ *      CHAT     普通聊天
+ *      ACK      确认消息
+ *      SYSTEM   系统消息
+ *
+ */
+
 
 public class Message {
+
+
+    //唯一消息ID
+    private String messageId;
+
+
+    //消息类型
     private String type;
+
+
+    //发送者
     private String sender;
+
+
+    //命令
     private String command;
+
+
+    //内容
     private String content;
-    private String timestamp;
+
+
+    //时间戳
+    private long timestamp;
+
+
+    //来源IP
     private String fromIp;
 
-    public Message(String mtype,String mcommand, String mcontent){
-        type=mtype;
-        command=mcommand;
-        content=mcontent;
-        long mtime = new Date().getTime();
-        timestamp=String.valueOf(mtime);
 
-        if (mtype.equals("local")){
-            fromIp="127.0.0.1";
-            sender="本地";
+    //图片
+    private String imgBase64;
+
+    //媒体类型：voice（语音）/ image（图片）/ 其他为 null（配合 content 中的 http 链接）
+    private String mediaType;
+
+
+
+    public Message(
+            String mtype,
+            String mcommand,
+            String mcontent
+    ){
+
+
+        this.messageId =
+                UUID.randomUUID().toString();
+
+
+        this.type = mtype;
+
+
+        this.command = mcommand;
+
+
+        this.content = mcontent;
+
+
+        this.timestamp =
+                System.currentTimeMillis();
+
+
+
+        if(mtype.equals("local")){
+
+            this.fromIp="127.0.0.1";
+
+            this.sender="本地";
+
         }
+
     }
 
-    public void setType(String type) {
-        this.type = type;
+
+
+
+
+    /*
+     *
+     * messageId
+     *
+     */
+
+
+    public String getMessageId(){
+
+        return messageId;
+
     }
+
+
+    public void setMessageId(String messageId){
+
+        this.messageId=messageId;
+
+    }
+
+
+
+
+
+    /*
+     *
+     * type
+     *
+     */
+
 
     public String getType(){
+
         return type;
+
     }
 
-    public String getFromIp() {
-        return fromIp;
+
+    public void setType(String type){
+
+        this.type=type;
+
     }
 
-    public void setFromIp(String fromIp) {
-        this.fromIp = fromIp;
-    }
 
-    public String getCommand() {
-        return command;
-    }
 
-    public String getContent() {
-        return content;
-    }
 
-    public String getTimestamp() {
-        return timestamp;
-    }
 
-    public void setSender(String sender) {
-        this.sender = sender;
-    }
+    /*
+     *
+     * sender
+     *
+     */
 
-    public String getSender() {
+
+    public String getSender(){
+
         return sender;
+
     }
 
-    public void setContent(String content) {
-        this.content = content;
+
+    public void setSender(String sender){
+
+        this.sender=sender;
+
     }
 
-    public boolean send(String toIp){
-        try {
-            DatagramSocket datagramSocket2=new DatagramSocket(2113);
-            this.setContent("[私聊消息]"+content);
-            Gson gson=new Gson();
-            String raw_data=gson.toJson(this);
 
-            byte[] bytes=raw_data.getBytes(StandardCharsets.UTF_8);
 
-            DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length, InetAddress.getByName(toIp),12251);
 
-            datagramSocket2.send(datagramPacket);
 
-            datagramSocket2.close();
-            return true;
-        }catch (Exception e1){
-            System.out.println(e1);
-            return false;
-        }
+    /*
+     *
+     * command
+     *
+     */
+
+
+    public String getCommand(){
+
+        return command;
+
     }
 
-    public boolean serverSend(String broadcast_ip){
-        try {
-            DatagramSocket datagramSocket2=new DatagramSocket(2113);
-            Gson gson=new Gson();
-            String raw_data=gson.toJson(this);
-            System.out.println(raw_data);
 
-            datagramSocket2.send(new DatagramPacket(raw_data.getBytes(StandardCharsets.UTF_8), raw_data.getBytes(StandardCharsets.UTF_8).length, InetAddress.getByName(broadcast_ip), 12251));
-            datagramSocket2.close();
-            return true;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return false;
+
+
+
+    /*
+     *
+     * content
+     *
+     */
+
+
+    public String getContent(){
+
+        return content;
+
     }
+
+
+    public void setContent(String content){
+
+        this.content=content;
+
+    }
+
+
+
+
+
+    /*
+     *
+     * timestamp
+     *
+     */
+
+
+    public long getTimestamp(){
+
+        return timestamp;
+
+    }
+
+
+
+
+
+    /*
+     *
+     * fromIp
+     *
+     */
+
+
+    public String getFromIp(){
+
+        return fromIp;
+
+    }
+
+
+    public void setFromIp(String fromIp){
+
+        this.fromIp=fromIp;
+
+    }
+
+
+
+
+
+    /*
+     *
+     * 图片
+     *
+     */
+
+
+    public String getImgBase64(){
+
+        return imgBase64;
+
+    }
+
+
+    public void setImgBase64(String imgBase64){
+
+        this.imgBase64=imgBase64;
+
+    }
+
+    public String getMediaType(){
+
+        return mediaType;
+
+    }
+
+    public void setMediaType(String mediaType){
+
+        this.mediaType=mediaType;
+
+    }
+
+
+
+
+
+
+    /**
+     *
+     * 客户端发送到服务器
+     *
+     */
+
     public boolean send(UserSettings userSettings){
-        try {
-            DatagramSocket datagramSocket2=new DatagramSocket(2113);
 
-            if (userSettings.getUserName()!=null){
-                this.sender=userSettings.getUserName();
-            }
-            if (userSettings.getHidemyIp()){
-                this.setSender("[匿名消息]");
-            }
-            Gson gson=new Gson();
-            String raw_Data = gson.toJson(this);
-            byte[] bytes=raw_Data.getBytes(StandardCharsets.UTF_8);
 
-            DatagramPacket datagramPacket=new DatagramPacket(bytes,bytes.length, InetAddress.getByName(userSettings.getServerIp()),2112);
 
-            datagramSocket2.send(datagramPacket);
+        if(userSettings.getUserName()!=null){
 
-            datagramSocket2.close();
-            return true;
-        }catch (Exception e1){
-            System.out.println(e1);
-            return false;
+            this.sender =
+                    userSettings.getUserName();
+
         }
+
+
+
+        if(userSettings.getHidemyIp()){
+
+            this.sender="[匿名消息]";
+
+        }
+
+
+
+        try{
+
+
+            new DatagramSend(
+                    2112,
+                    this,
+                    userSettings.getServerIp()
+            ).send();
+
+
+            return true;
+
+
+        }catch(Exception e){
+
+            e.printStackTrace();
+
+        }
+
+
+        return false;
+
     }
+
+
+
+
+
+
+    /**
+     *
+     * 服务器发送给客户端
+     *
+     */
+
+    public boolean sendToClient(String ip){
+
+
+        try{
+
+
+            new DatagramSend(
+                    12251,
+                    this,
+                    ip
+            ).sendRaw();
+
+
+            return true;
+
+
+        }catch(Exception e){
+
+            e.printStackTrace();
+
+        }
+
+
+        return false;
+
+
+    }
+
+
+
+
+
+
+
+    /**
+     *
+     * 客户端加入/保活：仅向服务器登记本机IP，不依赖聊天消息也能收到转发
+     *
+     */
+
+    public boolean sendJoinRaw(UserSettings userSettings){
+
+        try{
+
+            new DatagramSend(
+                    2112,
+                    this,
+                    userSettings.getServerIp()
+            ).sendRaw();
+
+            return true;
+
+        }catch(Exception e){
+
+            e.printStackTrace();
+
+        }
+
+        return false;
+
+    }
+
+
+
+    /**
+     *
+     * 服务器广播
+     *
+     */
+
+    public boolean serverSend(String broadcastIp){
+
+
+        try{
+
+
+            new DatagramSend(
+                    12251,
+                    this,
+                    broadcastIp
+            ).sendRaw();
+
+
+            return true;
+
+
+        }catch(Exception e){
+
+            e.printStackTrace();
+
+        }
+
+
+        return false;
+
+
+    }
+
+
+
 
 }

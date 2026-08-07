@@ -1,0 +1,137 @@
+JFDML JFormDesigner: "8.3" encoding: "UTF-8"
+
+new FormModel {
+	contentType: "form/swing"
+	root: new FormRoot {
+		add( new FormContainer( "javax.swing.JPanel", new FormLayoutManager( class com.intellij.uiDesigner.core.GridLayoutManager ) {
+			"$columnCount": 2
+			"$rowCount": 7
+			"margin": new java.awt.Insets( 5, 5, 5, 5 )
+		} ) {
+			name: "panel1"
+			"preferredSize": new java.awt.Dimension( 600, 400 )
+			"requestFocusEnabled": false
+			add( new FormComponent( "javax.swing.JButton" ) {
+				name: "sendButton"
+				"text": "Send"
+			}, new FormLayoutConstraints( class com.intellij.uiDesigner.core.GridConstraints ) {
+				"column": 1
+				"row": 6
+				"fill": 1
+				"vSizePolicy": 0
+			} )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "label1"
+				"text": "聊天框"
+				auxiliary() {
+					"JavaCodeGenerator.variableLocal": true
+				}
+			}, new FormLayoutConstraints( class com.intellij.uiDesigner.core.GridConstraints ) {
+				"row": 1
+				"anchor": 8
+				"hSizePolicy": 0
+				"vSizePolicy": 0
+			} )
+			add( new FormComponent( "javax.swing.JLabel" ) {
+				name: "label2"
+				"text": "在线列表"
+				auxiliary() {
+					"JavaCodeGenerator.variableLocal": true
+				}
+			}, new FormLayoutConstraints( class com.intellij.uiDesigner.core.GridConstraints ) {
+				"column": 1
+				"row": 1
+				"anchor": 8
+				"hSizePolicy": 0
+				"vSizePolicy": 0
+			} )
+			add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+				name: "scrollPane1"
+				"horizontalScrollBarPolicy": 30
+				add( new FormComponent( "javax.swing.JList" ) {
+					name: "messageJList"
+					"fixedCellHeight": -1
+					"fixedCellWidth": -1
+				} )
+			}, new FormLayoutConstraints( class com.intellij.uiDesigner.core.GridConstraints ) {
+				"row": 2
+				"rowSpan": 2
+				"fill": 3
+				"hSizePolicy": 7
+				"vSizePolicy": 7
+			} )
+			add( new FormComponent( "javax.swing.JList" ) {
+				name: "list1"
+			}, new FormLayoutConstraints( class com.intellij.uiDesigner.core.GridConstraints ) {
+				"column": 1
+				"row": 2
+				"rowSpan": 2
+				"fill": 3
+				"hSizePolicy": 2
+				"vSizePolicy": 6
+				"preferredSize": new java.awt.Dimension( 150, 50 )
+			} )
+			add( new FormContainer( "javax.swing.JToolBar", new FormLayoutManager( class javax.swing.JToolBar ) ) {
+				name: "Jtoolbar"
+			add( new FormComponent( "javax.swing.JButton" ) {
+				name: "serverIPButton"
+				"text": "serverIP"
+			} )
+				add( new FormComponent( "javax.swing.JToolBar$Separator" ) {
+					name: "separator3"
+					auxiliary() {
+						"JavaCodeGenerator.variableLocal": true
+					}
+				} )
+				add( new FormComponent( "javax.swing.JButton" ) {
+					name: "fileShareButton"
+					"text": "FileShare"
+				} )
+				add( new FormComponent( "javax.swing.JToolBar$Separator" ) {
+					name: "separator4"
+					auxiliary() {
+						"JavaCodeGenerator.variableLocal": true
+					}
+				} )
+				add( new FormComponent( "javax.swing.JButton" ) {
+					name: "aboutButton"
+					"text": "About"
+				} )
+			}, new FormLayoutConstraints( class com.intellij.uiDesigner.core.GridConstraints ) {
+				"colSpan": 2
+				"fill": 1
+				"hSizePolicy": 6
+				"vSizePolicy": 0
+				"preferredSize": new java.awt.Dimension( -1, 20 )
+			} )
+			add( new FormContainer( "javax.swing.JScrollPane", new FormLayoutManager( class javax.swing.JScrollPane ) ) {
+				name: "jscrollpane_message"
+				"horizontalScrollBarPolicy": 31
+				add( new FormComponent( "javax.swing.JTextArea" ) {
+					name: "textArea_message"
+					"lineWrap": true
+					"margin": new java.awt.Insets( 2, 2, 2, 2 )
+					"wrapStyleWord": true
+				} )
+			}, new FormLayoutConstraints( class com.intellij.uiDesigner.core.GridConstraints ) {
+				"row": 5
+				"rowSpan": 2
+				"fill": 3
+				"hSizePolicy": 7
+				"vSizePolicy": 6
+				"preferredSize": new java.awt.Dimension( -1, 40 )
+			} )
+			add( new FormComponent( "javax.swing.JButton" ) {
+				name: "sendPicturesButton"
+				"text": "Send Pictures"
+			}, new FormLayoutConstraints( class com.intellij.uiDesigner.core.GridConstraints ) {
+				"row": 4
+				"fill": 1
+				"vSizePolicy": 0
+			} )
+		}, new FormLayoutConstraints( null ) {
+			"location": new java.awt.Point( 0, 0 )
+			"size": new java.awt.Dimension( 500, 400 )
+		} )
+	}
+}
