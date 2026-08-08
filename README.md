@@ -48,6 +48,14 @@ Download apk from release of this project:
 [Udpchat_android](https://github.com/LanHao0/Udpchat_android/releases)
 **(app can't receive private chat for now)**
 
+## 赞助 / Sponsor
+
+如果这个小工具对你有帮助，欢迎请作者喝杯咖啡 ☕
+
+![赞助](src/main/resources/support/support.png)
+
+软件主界面也提供了「赞助」按钮，点击即可同时查看这两张收款码（左支付宝、右微信）。
+
 ## Build from source
 
     mvn clean package

@@ -232,6 +232,13 @@ public class ClientChat {
             }
         });
 
+        // 赞助按钮：展示支付宝 / 微信收款码（左支付宝、右微信）
+        clientChat.sponsorButton = new JButton();
+        clientChat.sponsorButton.setText(I18n.get("toolbar.sponsor"));
+        jToolBar.addSeparator();
+        jToolBar.add(clientChat.sponsorButton);
+        clientChat.sponsorButton.addActionListener(e -> openSponsorDialog());
+
 
         discoverServer(frame, picked -> onServerPicked(picked, jButton_severIP, userSettings), startServerAction);
 
@@ -633,6 +640,7 @@ public class ClientChat {
             clientChat.fileShareButton.setText(userSettings.isOnFileSharing()
                     ? I18n.get("toolbar.fileShare.stop") : I18n.get("toolbar.fileShare"));
             clientChat.aboutButton.setText(I18n.get("toolbar.about"));
+            clientChat.sponsorButton.setText(I18n.get("toolbar.sponsor"));
             copyMsgItem.setText(I18n.get("menu.copyMessage"));
             cutItem.setText(I18n.get("text.cut"));
             copyItem.setText(I18n.get("text.copy"));
@@ -793,6 +801,58 @@ public class ClientChat {
         label.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) { dlg.dispose(); }
         });
+    }
+
+    /** 赞助对话框：左右并排展示支付宝 / 微信 收款码 */
+    private static void openSponsorDialog() {
+        final JDialog dlg = new JDialog((Frame) null, "赞助", false);
+        dlg.setLayout(new BorderLayout());
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+        panel.add(buildSponsorImage("/support/support.png", "谢谢您的赞助！"));
+        dlg.add(panel, BorderLayout.CENTER);
+        dlg.setResizable(false);
+        dlg.pack();
+        dlg.setLocationRelativeTo(null);
+        dlg.setVisible(true);
+    }
+
+    /** 加载 classpath 下的收款码图片，缩放到合适高度后在带标题的面板中展示 */
+    private static Component buildSponsorImage(String res, String caption) {
+        JPanel p = new JPanel(new BorderLayout());
+        p.add(new JLabel(caption, SwingConstants.CENTER), BorderLayout.NORTH);
+        JLabel imgLabel = new JLabel("加载中…", SwingConstants.CENTER);
+        p.add(imgLabel, BorderLayout.CENTER);
+        new SwingWorker<ImageIcon, Void>() {
+            @Override
+            protected ImageIcon doInBackground() throws Exception {
+                BufferedImage img = ImageIO.read(ClientChat.class.getResourceAsStream(res));
+                int targetH = 320;
+                int w = img.getWidth(), h = img.getHeight();
+                int targetW = (int) (w * (targetH / (double) h));
+                Image scaled = img.getScaledInstance(targetW, targetH, Image.SCALE_SMOOTH);
+                return new ImageIcon(scaled);
+            }
+            @Override
+            protected void done() {
+                try {
+                    ImageIcon ic = get();
+                    imgLabel.setIcon(ic);
+                    imgLabel.setText(null);
+                    p.revalidate();
+                    // 图片是异步加载的，加载完成后重新计算窗口大小，
+                    // 否则对话框会停在“加载中”占位符的小尺寸、显示不全
+                    Window w = SwingUtilities.getWindowAncestor(p);
+                    if (w != null) {
+                        w.pack();
+                        w.setLocationRelativeTo(null);
+                    }
+                } catch (Exception ex) {
+                    imgLabel.setText("加载失败: " + ex.getMessage());
+                }
+            }
+        }.execute();
+        return p;
     }
 
     /** 下载文件消息到本地 received 目录，并用系统默认程序打开 */
@@ -1139,6 +1199,9 @@ public class ClientChat {
         }
         // JFormDesigner - End of component initialization  //GEN-END:initComponents  @formatter:on
     }
+
+    // 赞助按钮（运行时在 main 中创建并加入工具栏，不由 JFormDesigner 管理）
+    private JButton sponsorButton;
 
     // JFormDesigner - Variables declaration - DO NOT MODIFY  //GEN-BEGIN:variables  @formatter:off
     private JPanel panel1;
