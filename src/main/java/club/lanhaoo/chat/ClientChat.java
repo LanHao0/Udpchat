@@ -84,7 +84,7 @@ public class ClientChat {
         // 发送消息后，强制把消息列表滚到最底部（无视用户是否曾上滑看历史）
         final boolean[] forceScrollOnNext = {false};
 
-        final JFrame frame = new JFrame(I18n.get("app.title"));
+        final JFrame frame = new JFrame("UDPChat 局域网 - 小兰出品");
 
         ClientChat clientChat = new ClientChat();
 
@@ -837,18 +837,27 @@ public class ClientChat {
         final JDialog dlg = new JDialog(SwingUtilities.getWindowAncestor(parent), "扫描服务器", Dialog.ModalityType.MODELESS);
         dlg.setLayout(new BorderLayout());
 
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        top.add(new JLabel("持续扫描中，双击或选“连接”加入："));
+        JPanel top = new JPanel();
+        top.setLayout(new BoxLayout(top, BoxLayout.Y_AXIS));
+
+        JPanel topRow1 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        topRow1.add(new JLabel("持续扫描中，双击或选“连接”加入："));
+        top.add(topRow1);
+
+        JPanel topRow2 = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        topRow2.add(new JLabel("没有可用服务器？"));
+        JButton btnStartServer = new JButton(I18n.get("toolbar.startServer"));
+        topRow2.add(btnStartServer);
+        top.add(topRow2);
+
         dlg.add(top, BorderLayout.NORTH);
         dlg.add(new JScrollPane(list), BorderLayout.CENTER);
 
         JPanel btns = new JPanel();
         JButton btnConnect = new JButton("连接");
-        JButton btnStartServer = new JButton(I18n.get("toolbar.startServer"));
         JButton btnManual = new JButton("手动输入...");
         JButton btnCancel = new JButton("取消");
         btns.add(btnConnect);
-        btns.add(btnStartServer);
         btns.add(btnManual);
         btns.add(btnCancel);
         dlg.add(btns, BorderLayout.SOUTH);
