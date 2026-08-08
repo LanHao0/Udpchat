@@ -78,12 +78,26 @@ jobs:
           }
           if (-not $iscc) { $iscc = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' }
           $env:PATH += ";$(Split-Path $iscc)"
+
+          # jpackage on Windows needs an .ico (not .png); embed the PNG into an ICO.
+          $png = [System.IO.File]::ReadAllBytes('icon/ic_launcher-web.png')
+          $ms = New-Object System.IO.MemoryStream
+          $bw = New-Object System.IO.BinaryWriter($ms)
+          $bw.Write([uint16]0); $bw.Write([uint16]1); $bw.Write([uint16]1)
+          $bw.Write([byte]0); $bw.Write([byte]0); $bw.Write([byte]0); $bw.Write([byte]0)
+          $bw.Write([uint16]1); $bw.Write([uint16]32)
+          $bw.Write([uint32]$png.Length); $bw.Write([uint32]22)
+          $bw.Write($png)
+          [System.IO.File]::WriteAllBytes('icon/app.ico', $ms.ToArray())
+          $ms.Dispose()
+
           New-Item -ItemType Directory -Force -Path pkg/app | Out-Null
           Copy-Item (Resolve-Path target/*-jar-with-dependencies.jar) pkg/app/ClientChat.jar
           $ver = '${{ github.event.release.tag_name }}'
           if (-not $ver) { $ver = '${{ github.ref_name }}' }
           if ($ver -notmatch '^\d+(\.\d+)*$') { $ver = '1.0' }
-          jpackage --type exe --name ClientChat --app-version $ver `
+          jpackage --type exe --name "UDPChat局域网" --app-version $ver `
+            --icon icon/app.ico `
             --input pkg --main-jar app/ClientChat.jar `
             --main-class club.lanhaoo.chat.ClientChat `
             --add-modules ALL-MODULE-PATH `
@@ -94,7 +108,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ClientChat-windows-installer
-          path: dist/ClientChat-*.exe
+          path: dist/*.exe
 
   release:
     needs: [build, windows-installer]
