@@ -4,7 +4,6 @@
 ![language java 9](https://img.shields.io/badge/language-java%209-yellow.svg)
 ![platform windows,linux,android](https://img.shields.io/badge/platform-windows|linux|android-lightgrey.svg)
 ![MIT license](https://img.shields.io/badge/license-MIT-000000.svg)
-[![codebeat badge](https://codebeat.co/badges/697f6359-4e8b-453f-b5a4-b02da0749bc9)](https://codebeat.co/projects/github-com-lanhao0-udpchat-master)
 [![Build Status](https://travis-ci.org/LanHao0/Udpchat.svg?branch=master)](https://travis-ci.org/LanHao0/Udpchat)
 
 This is a Java project.
