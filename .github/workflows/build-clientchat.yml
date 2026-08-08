@@ -96,7 +96,7 @@ jobs:
           $ver = '${{ github.event.release.tag_name }}'
           if (-not $ver) { $ver = '${{ github.ref_name }}' }
           if ($ver -notmatch '^\d+(\.\d+)*$') { $ver = '1.0' }
-          jpackage --type exe --name "UDPChat局域网" --app-version $ver `
+          jpackage --type exe --name "UDPChat" --app-version $ver `
             --icon icon/app.ico `
             --input pkg --main-jar app/ClientChat.jar `
             --main-class club.lanhaoo.chat.ClientChat `
