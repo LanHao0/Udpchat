@@ -28,15 +28,12 @@ jobs:
       - name: Build ClientChat fat jar
         run: mvn -B clean package assembly:single
 
-      # Bundle the jar (renamed to ClientChat.jar) together with the
-      # launcher scripts so users can run it directly.
+      # Bundle the jar (renamed to ClientChat.jar) and the Android APK.
       - name: Prepare distribution
         run: |
           mkdir -p dist
           cp target/*-jar-with-dependencies.jar dist/ClientChat.jar
-          cp ClientChat.cmd ClientChat.sh dist/
           cp app/app-release.apk dist/
-          chmod +x dist/ClientChat.sh
 
       - name: Upload ClientChat artifact
         uses: actions/upload-artifact@v4
@@ -44,8 +41,63 @@ jobs:
           name: ClientChat
           path: dist/
 
+  # Self-contained Windows installer: bundles its own JRE so it runs on
+  # machines without Java. Built with jpackage + Inno Setup (.exe).
+  windows-installer:
+    if: github.event_name != 'push'
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Use Temurin 21 (LTS) here: Temurin 24+ has JEP 493 enabled and no
+      # longer ships jmods, so jpackage/jlink can't build the bundled runtime
+      # ("does not contain packaged modules"). JDK 21 still ships jmods and a
+      # JDK 21 runtime runs the Java 11-targeted jar without issue.
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y
+
+      - name: Build ClientChat fat jar
+        run: mvn -B package assembly:single
+
+      - name: Build Windows installer (jpackage + Inno Setup)
+        shell: pwsh
+        run: |
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue)?.Source
+          if (-not $iscc) {
+            $iscc = Get-ChildItem 'C:\Program Files (x86)\Inno Setup *','C:\Program Files\Inno Setup *' `
+              -Recurse -Filter ISCC.exe -ErrorAction SilentlyContinue |
+              Select-Object -First 1 -ExpandProperty FullName
+          }
+          if (-not $iscc) { $iscc = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' }
+          $env:PATH += ";$(Split-Path $iscc)"
+          New-Item -ItemType Directory -Force -Path pkg/app | Out-Null
+          Copy-Item (Resolve-Path target/*-jar-with-dependencies.jar) pkg/app/ClientChat.jar
+          $ver = '${{ github.event.release.tag_name }}'
+          if (-not $ver) { $ver = '${{ github.ref_name }}' }
+          if ($ver -notmatch '^\d+(\.\d+)*$') { $ver = '1.0' }
+          jpackage --type exe --name ClientChat --app-version $ver `
+            --input pkg --main-jar app/ClientChat.jar `
+            --main-class club.lanhaoo.chat.ClientChat `
+            --add-modules ALL-MODULE-PATH `
+            --win-dir-chooser --win-shortcut --win-menu `
+            --dest dist
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClientChat-windows-installer
+          path: dist/ClientChat-*.exe
+
   release:
-    needs: build
+    needs: [build, windows-installer]
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
     permissions:
@@ -67,15 +119,18 @@ jobs:
       - name: Build ClientChat fat jar
         run: mvn -B clean package assembly:single
 
-      # Bundle the jar (renamed to ClientChat.jar) together with the
-      # launcher scripts so users can run it directly.
+      - name: Download Windows installer
+        uses: actions/download-artifact@v4
+        with:
+          name: ClientChat-windows-installer
+          path: dist
+
+      # Bundle the jar (renamed to ClientChat.jar) and the Android APK.
       - name: Prepare distribution
         run: |
           mkdir -p dist
           cp target/*-jar-with-dependencies.jar dist/ClientChat.jar
-          cp ClientChat.cmd ClientChat.sh dist/
           cp app/app-release.apk dist/
-          chmod +x dist/ClientChat.sh
 
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
