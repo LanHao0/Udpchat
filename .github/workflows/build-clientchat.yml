@@ -34,9 +34,7 @@ jobs:
         run: |
           mkdir -p dist
           cp target/*-jar-with-dependencies.jar dist/ClientChat.jar
-          cp ClientChat.cmd ClientChat.sh dist/
           cp app/app-release.apk dist/
-          chmod +x dist/ClientChat.sh
 
       - name: Upload ClientChat artifact
         uses: actions/upload-artifact@v4
@@ -73,9 +71,7 @@ jobs:
         run: |
           mkdir -p dist
           cp target/*-jar-with-dependencies.jar dist/ClientChat.jar
-          cp ClientChat.cmd ClientChat.sh dist/
           cp app/app-release.apk dist/
-          chmod +x dist/ClientChat.sh
 
       - name: Publish to GitHub Release
         uses: softprops/action-gh-release@v2
