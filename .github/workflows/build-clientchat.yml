@@ -50,11 +50,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up JDK 26
+      # Use Temurin 21 (LTS) here: Temurin 24+ has JEP 493 enabled and no
+      # longer ships jmods, so jpackage/jlink can't build the bundled runtime
+      # ("does not contain packaged modules"). JDK 21 still ships jmods and a
+      # JDK 21 runtime runs the Java 11-targeted jar without issue.
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '26'
+          java-version: '21'
           cache: maven
 
       - name: Install Inno Setup
