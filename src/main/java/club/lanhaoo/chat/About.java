@@ -21,6 +21,7 @@ import org.apache.http.util.EntityUtils;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.Desktop;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
@@ -38,12 +39,14 @@ public class About {
     }
 
     public void openWindow() {
-        JFrame frame = new JFrame(I18n.get("about.title"));
+        JFrame frame = new JFrame("UDPChat");
         final About about=new About();
         frame.setContentPane(about.Jpanel);
         about.softwareInfoButton.setText(I18n.get("about.software"));
         about.openSourceLicensesCreditButton.setText(I18n.get("about.credits"));
         about.checkUpdateButton.setText(I18n.get("about.checkUpdate"));
+        about.githubButton.setText("GITHUB 开源");
+        about.githubButton.addActionListener(e -> openGithub());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         //设置居中
         Point point = GraphicsEnvironment.getLocalGraphicsEnvironment().getCenterPoint();
@@ -143,6 +146,14 @@ public class About {
         });
     }
 
+
+    private void openGithub() {
+        try {
+            Desktop.getDesktop().browse(new URI("https://github.com/LanHao0/Udpchat"));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 
     private void update(About about) throws URISyntaxException, IOException {
 
@@ -247,6 +258,7 @@ public class About {
         JScrollPane scrollPane1 = new JScrollPane();
         textArea1 = new JTextArea();
         softwareInfoButton = new JButton();
+        githubButton = new JButton();
 
         //======== Jpanel ========
         {
@@ -261,6 +273,14 @@ public class About {
             //---- checkUpdateButton ----
             checkUpdateButton.setText("CheckUpdate");
             Jpanel.add(checkUpdateButton, new GridConstraints(0, 0, 1, 1,
+                GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
+                GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
+                GridConstraints.SIZEPOLICY_FIXED,
+                null, null, null));
+
+            //---- githubButton ----
+            githubButton.setText("GITHUB 开源");
+            Jpanel.add(githubButton, new GridConstraints(0, 1, 1, 1,
                 GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL,
                 GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW,
                 GridConstraints.SIZEPOLICY_FIXED,
@@ -308,5 +328,6 @@ public class About {
     private JButton openSourceLicensesCreditButton;
     private JTextArea textArea1;
     private JButton softwareInfoButton;
+    private JButton githubButton;
     // JFormDesigner - End of variables declaration  //GEN-END:variables  @formatter:on
 }

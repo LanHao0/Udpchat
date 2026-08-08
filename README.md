@@ -4,7 +4,6 @@
 ![language java 9](https://img.shields.io/badge/language-java%209-yellow.svg)
 ![platform windows,linux,android](https://img.shields.io/badge/platform-windows|linux|android-lightgrey.svg)
 ![MIT license](https://img.shields.io/badge/license-MIT-000000.svg)
-[![codebeat badge](https://codebeat.co/badges/697f6359-4e8b-453f-b5a4-b02da0749bc9)](https://codebeat.co/projects/github-com-lanhao0-udpchat-master)
 [![Build Status](https://travis-ci.org/LanHao0/Udpchat.svg?branch=master)](https://travis-ci.org/LanHao0/Udpchat)
 
 This is a Java project.
@@ -48,6 +47,14 @@ enter server ip in client.sh, then enter any message you want.
 Download apk from release of this project:
 [Udpchat_android](https://github.com/LanHao0/Udpchat_android/releases)
 **(app can't receive private chat for now)**
+
+## 赞助 / Sponsor
+
+如果这个小工具对你有帮助，欢迎请作者喝杯咖啡 ☕
+
+![赞助](src/main/resources/support/support.png)
+
+软件主界面也提供了「赞助」按钮，点击即可同时查看这两张收款码（左支付宝、右微信）。
 
 ## Build from source
 

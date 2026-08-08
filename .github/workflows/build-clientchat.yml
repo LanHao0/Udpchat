@@ -1,0 +1,83 @@
+name: Build ClientChat
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+  release:
+    types: [ published ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 26
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '26'
+          cache: maven
+
+      # maven-assembly-plugin has no <execution> bound to a phase in pom.xml,
+      # so we explicitly call assembly:single to produce the
+      # jar-with-dependencies (main class club.lanhaoo.chat.ClientChat).
+      - name: Build ClientChat fat jar
+        run: mvn -B clean package assembly:single
+
+      # Bundle the jar (renamed to ClientChat.jar) together with the
+      # launcher scripts so users can run it directly.
+      - name: Prepare distribution
+        run: |
+          mkdir -p dist
+          cp target/*-jar-with-dependencies.jar dist/ClientChat.jar
+          cp ClientChat.cmd ClientChat.sh dist/
+          cp app/app-release.apk dist/
+          chmod +x dist/ClientChat.sh
+
+      - name: Upload ClientChat artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ClientChat
+          path: dist/
+
+  release:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 26
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '26'
+          cache: maven
+
+      # maven-assembly-plugin has no <execution> bound to a phase in pom.xml,
+      # so we explicitly call assembly:single to produce the
+      # jar-with-dependencies (main class club.lanhaoo.chat.ClientChat).
+      - name: Build ClientChat fat jar
+        run: mvn -B clean package assembly:single
+
+      # Bundle the jar (renamed to ClientChat.jar) together with the
+      # launcher scripts so users can run it directly.
+      - name: Prepare distribution
+        run: |
+          mkdir -p dist
+          cp target/*-jar-with-dependencies.jar dist/ClientChat.jar
+          cp ClientChat.cmd ClientChat.sh dist/
+          cp app/app-release.apk dist/
+          chmod +x dist/ClientChat.sh
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
